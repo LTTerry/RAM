@@ -112,6 +112,46 @@ Provide a concise 2-sentence summary of secondary market price clearing movement
         config: { tools: [{ googleSearch: {} }] },
       });
       liveMarketNotes = res.text || '';
+
+      console.log('[GitHub Actions] Starting individual SKU price search with 4.5s delays (Rate limit: 15 RPM)...');
+      
+      for (let i = 0; i < serverTrends.length; i++) {
+        const trend = serverTrends[i];
+        console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length}: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
+        
+        try {
+          const skuPrompt = `
+Search the live web for the current average secondary market price (used/refurbished) for: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM server memory.
+Return ONLY a valid JSON object with the following keys, containing only numbers (no symbols or text). If you cannot find exact data, estimate based on similar modules.
+{
+  "currentAvgPrice": 12.50,
+  "lowestAskingCurrent": 9.50,
+  "highestAskingCurrent": 18.00
+}`;
+          const skuRes = await ai.models.generateContent({
+            model: 'gemini-3.7-flash',
+            contents: skuPrompt,
+            config: {
+              tools: [{ googleSearch: {} }],
+              responseMimeType: 'application/json'
+            },
+          });
+          
+          if (skuRes.text) {
+             const parsed = JSON.parse(skuRes.text);
+             if (parsed.currentAvgPrice) trend.currentAvgPrice = Number(parsed.currentAvgPrice);
+             if (parsed.lowestAskingCurrent) trend.lowestAskingCurrent = Number(parsed.lowestAskingCurrent);
+             if (parsed.highestAskingCurrent) trend.highestAskingCurrent = Number(parsed.highestAskingCurrent);
+          }
+        } catch (skuErr: any) {
+          console.warn(`[GitHub Actions] Failed to fetch data for ${trend.capacityGB}GB ${trend.generation}:`, skuErr.message);
+        }
+        
+        // Wait 4.5 seconds to respect the 15 RPM free tier limit
+        if (i < serverTrends.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 4500));
+        }
+      }
     } catch (aiErr: any) {
       console.log('[GitHub Actions] Live web search check skipped or failed:', aiErr.message);
     }

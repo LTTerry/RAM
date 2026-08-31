@@ -191,7 +191,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
       'Condition',
       'Tested',
       'Warranty',
-      'Source URL',
       'Notes'
     ];
 
@@ -221,7 +220,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         l.condition,
         l.testedWorking ? 'YES' : 'NO',
         l.warranty || '30 Days',
-        l.sourceUrl,
         `"${(l.notes || '').replace(/"/g, '""')}"`
       ];
     });
@@ -477,13 +475,12 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   </div>
                 </th>
                 <th className="py-3 px-3">Condition & Testing</th>
-                <th className="py-3 px-3 text-right">Source Link</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredListings.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-8 text-center text-slate-500">
+                  <td colSpan={9} className="py-8 text-center text-slate-500">
                     No memory listings match your selected filter criteria.
                   </td>
                 </tr>
@@ -627,19 +624,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         <div className="text-[10px] text-slate-500">
                           {item.warranty || '30-Day Warranty'}
                         </div>
-                      </td>
-
-                      {/* Source Link */}
-                      <td className="py-3 px-3 text-right whitespace-nowrap">
-                        <a
-                          href={item.sourceUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 bg-indigo-500/10 hover:bg-indigo-500/20 px-2 py-1 rounded text-xs transition-colors border border-indigo-500/20"
-                        >
-                          <span>{item.sourceDomain || 'View'}</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
                       </td>
                     </tr>
                   );

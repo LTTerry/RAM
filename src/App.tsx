@@ -24,7 +24,7 @@ export default function App() {
   // Fetch static market data from GitHub Pages host on load
   const fetchMarketData = async () => {
     try {
-      const res = await fetch('./market-data.json');
+      const res = await fetch(`${import.meta.env.BASE_URL}market-data.json`);
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
