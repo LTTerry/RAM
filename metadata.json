@@ -1,0 +1,6 @@
+{
+  "name": "Server Memory Market Intelligence",
+  "description": "Full-stack automated secondary market tracker and valuation intelligence for used DDR3, DDR4, and DDR5 ECC RDIMM server memory with automated 8:00 AM daily node-cron pricing refreshes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
