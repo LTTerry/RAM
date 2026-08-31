@@ -148,10 +148,7 @@ export default function App() {
                   </div>
                   <div className="text-2xl font-mono font-bold">
                     {listings.length} SKUs Audited
-                  </div>
-                  <div className="text-xs opacity-80 mt-1">
-                    Node.js + node-cron • Zero Database Cost (JSON Cache)
-                  </div>
+                  
                 </div>
                 <div className="mt-3 pt-2 border-t border-indigo-400/40 flex justify-between items-center text-[11px] opacity-90 font-mono">
                   <span>eBay • CPU Medics • ServerSupply</span>
