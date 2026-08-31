@@ -1,6 +1,8 @@
 name: Daily Market Data Sync
 
 on:
+  push:
+    branches: [ "main" ]
   schedule:
     # Runs every day at 08:00 UTC
     - cron: '0 8 * * *'
@@ -27,7 +29,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run Market Data Update Script
         run: npm run update-data
