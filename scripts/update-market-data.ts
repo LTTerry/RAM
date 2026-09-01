@@ -20,6 +20,69 @@ function getGenAIClient(): GoogleGenAI | null {
   return new GoogleGenAI({ apiKey });
 }
 
+// Get eBay Token
+async function getEbayToken(appId: string, certId: string): Promise<string | null> {
+  try {
+    const credentials = Buffer.from(`${appId}:${certId}`).toString('base64');
+    const response = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Authorization': `Basic ${credentials}`
+      },
+      body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope'
+    });
+    
+    if (!response.ok) {
+      console.warn('[eBay API] Failed to get token:', response.statusText);
+      return null;
+    }
+    
+    const data = await response.json();
+    return data.access_token || null;
+  } catch (error) {
+    console.warn('[eBay API] Error fetching token:', error);
+    return null;
+  }
+}
+
+// Search eBay Prices
+async function searchEbayPrices(token: string, trend: any) {
+  const q = encodeURIComponent(`${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM`);
+  const filter = encodeURIComponent('conditionIds:{3000|2000|2500}');
+  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=${filter}&limit=10`;
+  
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+    }
+  });
+  
+  if (!response.ok) throw new Error(`eBay API error: ${response.statusText}`);
+  
+  const data = await response.json();
+  if (data.itemSummaries && data.itemSummaries.length > 0) {
+    let prices = data.itemSummaries
+      .map((item: any) => parseFloat(item.price?.value || '0'))
+      .filter((p: number) => p > 0);
+      
+    if (prices.length > 0) {
+      prices.sort((a: number, b: number) => a - b);
+      const lowest = prices[0];
+      const highest = prices[prices.length - 1];
+      const avg = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+      
+      return {
+        lowestAskingCurrent: Number(lowest.toFixed(2)),
+        highestAskingCurrent: Number(highest.toFixed(2)),
+        currentAvgPrice: Number(avg.toFixed(2))
+      };
+    }
+  }
+  return null;
+}
+
 // Format current time into human-friendly strings
 function getFormattedTimeMetadata() {
   const now = new Date();
@@ -95,13 +158,48 @@ async function updateMarketData() {
     totalSkusAudited: serverTrends.length,
   };
 
+  const ebayAppId = process.env.EBAY_APP_ID;
+  const ebayCertId = process.env.EBAY_CERT_ID;
   const ai = getGenAIClient();
+  
   let liveMarketNotes = '';
+  let usedEbay = false;
 
-  if (ai) {
-    console.log('[GitHub Actions] Querying live secondary market intelligence via Gemini Search...');
+  // 1. Try eBay API First
+  if (ebayAppId && ebayCertId) {
+    console.log('[GitHub Actions] eBay Production Credentials found. Connecting to Real eBay API...');
+    const token = await getEbayToken(ebayAppId, ebayCertId);
     
-    // 1. Get the Market Summary (in its own try-catch so it doesn't break the loop if it fails)
+    if (token) {
+      usedEbay = true;
+      liveMarketNotes = "Live market data sourced directly from real-time eBay Browse API (Production).";
+      console.log('[GitHub Actions] Successfully authenticated with eBay API.');
+      
+      for (let i = 0; i < serverTrends.length; i++) {
+        const trend = serverTrends[i];
+        console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length} via eBay: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
+        
+        try {
+          const prices = await searchEbayPrices(token, trend);
+          if (prices) {
+            trend.currentAvgPrice = prices.currentAvgPrice;
+            trend.lowestAskingCurrent = prices.lowestAskingCurrent;
+            trend.highestAskingCurrent = prices.highestAskingCurrent;
+          }
+        } catch (e: any) {
+          console.warn(`[GitHub Actions] eBay search failed for ${trend.capacityGB}GB ${trend.generation}:`, e.message);
+        }
+        
+        // Brief 500ms delay to respect eBay Browse API rate limits
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+  }
+
+  // 2. Fallback to Gemini AI if eBay API isn't configured or failed
+  if (!usedEbay && ai) {
+    console.log('[GitHub Actions] Querying live secondary market intelligence via Gemini Search (Fallback)...');
+    
     try {
       const searchPrompt = `
 You are an ITAD server memory market analyst. 
@@ -118,12 +216,9 @@ Provide a concise 2-sentence summary of secondary market price clearing movement
       console.warn('[GitHub Actions] Live market summary failed (likely rate limit):', summaryErr.message);
     }
 
-    // Wait 5 seconds before starting the loop to ensure we don't trigger burst rate limits
     await new Promise(resolve => setTimeout(resolve, 5000));
-
     console.log('[GitHub Actions] Starting individual SKU price search with 5s delays (Rate limit: 15 RPM)...');
     
-    // 2. Loop through individual SKUs
     for (let i = 0; i < serverTrends.length; i++) {
       const trend = serverTrends[i];
       console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length}: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
@@ -156,7 +251,6 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
         console.warn(`[GitHub Actions] Failed to fetch data for ${trend.capacityGB}GB ${trend.generation}:`, skuErr.message);
       }
       
-      // Wait 5 seconds to comfortably respect the 15 RPM free tier limit
       if (i < serverTrends.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 5000));
       }
@@ -186,7 +280,7 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
     type: 'SCHEDULED',
     status: 'SUCCESS',
     message: liveMarketNotes
-      ? `Recalculated ${serverTrends.length} SKUs with live search grounding: ${liveMarketNotes.slice(0, 100)}...`
+      ? (usedEbay ? liveMarketNotes : `Recalculated ${serverTrends.length} SKUs with live search grounding: ${liveMarketNotes.slice(0, 100)}...`)
       : `Recalculated ${serverTrends.length} SKUs and updated secondary price floors/ceilings.`,
     skusUpdated: serverTrends.length,
   };
