@@ -99,8 +99,10 @@ async function updateMarketData() {
   let liveMarketNotes = '';
 
   if (ai) {
+    console.log('[GitHub Actions] Querying live secondary market intelligence via Gemini Search...');
+    
+    // 1. Get the Market Summary (in its own try-catch so it doesn't break the loop if it fails)
     try {
-      console.log('[GitHub Actions] Querying live secondary market intelligence via Gemini Search...');
       const searchPrompt = `
 You are an ITAD server memory market analyst. 
 Check recent eBay and secondary IT refurbisher asking prices for enterprise ECC RDIMM server memory (DDR4 32GB/64GB, DDR5 32GB/64GB/128GB).
@@ -112,15 +114,22 @@ Provide a concise 2-sentence summary of secondary market price clearing movement
         config: { tools: [{ googleSearch: {} }] },
       });
       liveMarketNotes = res.text || '';
+    } catch (summaryErr: any) {
+      console.warn('[GitHub Actions] Live market summary failed (likely rate limit):', summaryErr.message);
+    }
 
-      console.log('[GitHub Actions] Starting individual SKU price search with 4.5s delays (Rate limit: 15 RPM)...');
+    // Wait 5 seconds before starting the loop to ensure we don't trigger burst rate limits
+    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    console.log('[GitHub Actions] Starting individual SKU price search with 5s delays (Rate limit: 15 RPM)...');
+    
+    // 2. Loop through individual SKUs
+    for (let i = 0; i < serverTrends.length; i++) {
+      const trend = serverTrends[i];
+      console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length}: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
       
-      for (let i = 0; i < serverTrends.length; i++) {
-        const trend = serverTrends[i];
-        console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length}: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
-        
-        try {
-          const skuPrompt = `
+      try {
+        const skuPrompt = `
 Search the live web for the current average secondary market price (used/refurbished) for: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM server memory.
 Return ONLY a valid JSON object with the following keys, containing only numbers (no symbols or text). If you cannot find exact data, estimate based on similar modules.
 {
@@ -128,32 +137,29 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
   "lowestAskingCurrent": 9.50,
   "highestAskingCurrent": 18.00
 }`;
-          const skuRes = await ai.models.generateContent({
-            model: 'gemini-3.7-flash',
-            contents: skuPrompt,
-            config: {
-              tools: [{ googleSearch: {} }],
-              responseMimeType: 'application/json'
-            },
-          });
-          
-          if (skuRes.text) {
-             const parsed = JSON.parse(skuRes.text);
-             if (parsed.currentAvgPrice) trend.currentAvgPrice = Number(parsed.currentAvgPrice);
-             if (parsed.lowestAskingCurrent) trend.lowestAskingCurrent = Number(parsed.lowestAskingCurrent);
-             if (parsed.highestAskingCurrent) trend.highestAskingCurrent = Number(parsed.highestAskingCurrent);
-          }
-        } catch (skuErr: any) {
-          console.warn(`[GitHub Actions] Failed to fetch data for ${trend.capacityGB}GB ${trend.generation}:`, skuErr.message);
-        }
+        const skuRes = await ai.models.generateContent({
+          model: 'gemini-3.7-flash',
+          contents: skuPrompt,
+          config: {
+            tools: [{ googleSearch: {} }],
+            responseMimeType: 'application/json'
+          },
+        });
         
-        // Wait 4.5 seconds to respect the 15 RPM free tier limit
-        if (i < serverTrends.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 4500));
+        if (skuRes.text) {
+           const parsed = JSON.parse(skuRes.text);
+           if (parsed.currentAvgPrice) trend.currentAvgPrice = Number(parsed.currentAvgPrice);
+           if (parsed.lowestAskingCurrent) trend.lowestAskingCurrent = Number(parsed.lowestAskingCurrent);
+           if (parsed.highestAskingCurrent) trend.highestAskingCurrent = Number(parsed.highestAskingCurrent);
         }
+      } catch (skuErr: any) {
+        console.warn(`[GitHub Actions] Failed to fetch data for ${trend.capacityGB}GB ${trend.generation}:`, skuErr.message);
       }
-    } catch (aiErr: any) {
-      console.log('[GitHub Actions] Live web search check skipped or failed:', aiErr.message);
+      
+      // Wait 5 seconds to comfortably respect the 15 RPM free tier limit
+      if (i < serverTrends.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
     }
   }
 

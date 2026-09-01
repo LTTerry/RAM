@@ -115,7 +115,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
         {/* Content Body */}
         <div className="p-6 overflow-y-auto space-y-5">
           {/* Status Banner */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cron Schedule</span>
               <div className="mt-2 text-sm font-mono font-bold text-white flex items-center gap-1.5">
@@ -133,34 +133,6 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               </div>
               <span className="text-[10px] text-slate-500 font-mono mt-1">Timezone: UTC</span>
             </div>
-
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Database Cost</span>
-              <div className="mt-2 text-sm font-mono font-bold text-emerald-400 flex items-center gap-1.5">
-                <Database className="w-4 h-4 text-emerald-400" />
-                <span>$0.00 / mo</span>
-              </div>
-              <span className="text-[10px] text-slate-500 font-mono mt-1">GitHub Pages Hosting</span>
-            </div>
-          </div>
-
-          {/* Architecture Details Box */}
-          <div className="bg-slate-950/60 p-4 rounded-xl border border-slate-800/80 space-y-2">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-              <Server className="w-3.5 h-3.5 text-indigo-400" />
-              GitHub Actions Architecture & Valuation Routine
-            </h4>
-            <ul className="text-xs text-slate-400 space-y-1.5 list-disc list-inside">
-              <li>
-                <strong className="text-slate-200">Scheduled Trigger:</strong> A GitHub Actions workflow runs every morning at 8:00 AM UTC.
-              </li>
-              <li>
-                <strong className="text-slate-200">Price Model:</strong> A Node script evaluates the latest secondary market clearing movements across all SKUs.
-              </li>
-              <li>
-                <strong className="text-slate-200">Static Export:</strong> The script overwrites <code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded">market-data.json</code> and automatically deploys the static site to GitHub Pages.
-              </li>
-            </ul>
           </div>
 
           {/* Feedback alert */}
@@ -170,28 +142,6 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               <span>{feedback}</span>
             </div>
           )}
-
-          {/* Manual Run Action */}
-          <div className="bg-indigo-950/30 border border-indigo-500/30 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-              <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span>GitHub Actions Manual Trigger</span>
-              </div>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                To force an immediate scan, you must trigger the <strong>"Daily Market Data Sync"</strong> workflow in your GitHub repository's Actions tab.
-              </p>
-            </div>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 rounded-lg text-xs font-bold text-white flex items-center gap-2 shadow-sm transition-all bg-indigo-600 hover:bg-indigo-500 active:scale-95 whitespace-nowrap"
-            >
-              Open GitHub
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
-          </div>
 
           {/* Execution History */}
           <div>

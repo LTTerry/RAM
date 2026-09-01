@@ -1,11 +1,11 @@
 {
   "success": true,
   "metadata": {
-    "lastUpdatedDate": "August 31, 2026",
-    "lastUpdatedDay": "Monday",
-    "lastUpdatedTime": "09:33 AM",
+    "lastUpdatedDate": "September 1, 2026",
+    "lastUpdatedDay": "Tuesday",
+    "lastUpdatedTime": "04:33 AM",
     "timezone": "UTC",
-    "formattedFullTimestamp": "Monday, August 31, 2026 at 09:33 AM (UTC)",
+    "formattedFullTimestamp": "Tuesday, September 1, 2026 at 04:33 AM (UTC)",
     "researchQuarter": "Q3 2026",
     "totalSkusAudited": 36,
     "marketScope": "eBay (Completed & Verified Lots), ServerSupply, CPU Medics, TechyParts, Wholesale B2B Trays"
@@ -33,7 +33,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/samsung-16gb-2rx4-pc3-10600r-ecc-rdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Tested pull from decommissioned Dell PowerEdge R710 server. MemTest86+ passed.",
       "stockStatus": "In Stock"
     },
@@ -59,7 +59,7 @@
       "warranty": "90-day ServerSupply warranty",
       "sourceUrl": "https://www.serversupply.com/products/part_search/query_parts.asp?q=HMT42GR7BMR4C-H9",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Grade A enterprise refurbished, static bag sealed.",
       "stockStatus": "In Stock"
     },
@@ -86,7 +86,7 @@
       "warranty": "60-day return policy",
       "sourceUrl": "https://www.ebay.com/itm/lot-8-micron-16gb-pc3-10600r-ecc-rdimm-128gb",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Bulk enterprise lot discount: $5.25/stick ($0.33/GB).",
       "stockStatus": "Bulk Lot Available"
     },
@@ -112,7 +112,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-16gb-2rx4-pc3l-12800r-ecc-server-ram",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "HP SmartMemory pull (HP P/N: 672612-081). High volume commodity item.",
       "stockStatus": "In Stock"
     },
@@ -138,7 +138,7 @@
       "warranty": "1-Year CPU Medics warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-snp667ecc-16g-16gb-pc3l-12800r-ddr3-1600-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Certified Dell PowerEdge R720/R620 replacement memory module.",
       "stockStatus": "In Stock"
     },
@@ -164,7 +164,7 @@
       "warranty": "30-day seller replacement",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-16gb-2rx4-pc3-14900r-1866mhz-ecc-rdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Fastest standard DDR3 RDIMM tier. Compatible with Mac Pro 2013 & Xeon E5-2600 v2.",
       "stockStatus": "In Stock"
     },
@@ -190,7 +190,7 @@
       "warranty": "6-Month Techyparts Warranty",
       "sourceUrl": "https://www.techyparts.com/micron-16gb-pc3-14900r-ddr3-1866mhz-rdimm",
       "sourceDomain": "techyparts.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Burn-in tested memory module for HP ProLiant Gen8.",
       "stockStatus": "In Stock"
     },
@@ -216,7 +216,7 @@
       "warranty": "60 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-4rx4-pc3l-10600l-ecc-lrdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Note: LRDIMM (Load Reduced) requires compatible BIOS and cannot mix with standard RDIMM.",
       "stockStatus": "In Stock"
     },
@@ -242,7 +242,7 @@
       "warranty": "30-day return",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-32gb-pc3l-12800l-ecc-lrdimm-1600mhz",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Cisco UCS & HP ProLiant DL380p Gen8 verified pull.",
       "stockStatus": "In Stock"
     },
@@ -268,7 +268,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC3-12800/32GB/SAMSUNG/M386B4G70DM0-YK0.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Fully benchmarked server memory module.",
       "stockStatus": "In Stock"
     },
@@ -294,7 +294,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-pc3-14900l-ddr3-1866-ecc-lrdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "High demand by Mac Pro (2013) 128GB RAM upgrade builders and Xeon E5 v2 homelabs.",
       "stockStatus": "In Stock"
     },
@@ -320,7 +320,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/samsung-16gb-2rx4-pc4-2133p-ecc-rdimm-m393a2g40db0",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Dell OEM part number 13CPC / 013CPC pull from PowerEdge R730.",
       "stockStatus": "In Stock"
     },
@@ -346,7 +346,7 @@
       "warranty": "90 days",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC4-17000/16GB/HYNIX/HMA42GR7MFR4N-TF.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Enterprise server certified.",
       "stockStatus": "In Stock"
     },
@@ -372,7 +372,7 @@
       "warranty": "60 days",
       "sourceUrl": "https://www.ebay.com/itm/micron-16gb-2rx8-pc4-2400t-ddr4-ecc-rdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "HPE ProLiant Gen9 pull (HP P/N: 809081-081).",
       "stockStatus": "In Stock"
     },
@@ -398,7 +398,7 @@
       "warranty": "1 Year Warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-16gb-ddr4-2400-pc4-19200-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "OEM tested for PowerEdge R740 and T440 servers.",
       "stockStatus": "In Stock"
     },
@@ -424,7 +424,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-16gb-2rx8-pc4-2666v-ecc-rdimm-m393a2k43cb2",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Very high volume item, standard in Intel Xeon Scalable Gen 1 & 2 servers.",
       "stockStatus": "In Stock"
     },
@@ -451,7 +451,7 @@
       "warranty": "60 days B2B warranty",
       "sourceUrl": "https://www.itcreations.com/wholesale/memory-lots/ddr4-16gb-2666",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "B2B tray quantity price: $15.00/unit ($0.94/GB).",
       "stockStatus": "Bulk Lot Available"
     },
@@ -477,7 +477,7 @@
       "warranty": "30-day returns",
       "sourceUrl": "https://www.ebay.com/itm/micron-16gb-pc4-2933y-ecc-rdimm-server-ram",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Supports Cascade Lake Xeon and AMD EPYC Rome 7002.",
       "stockStatus": "In Stock"
     },
@@ -503,7 +503,7 @@
       "warranty": "6 Month Techyparts Warranty",
       "sourceUrl": "https://www.techyparts.com/samsung-16gb-pc4-2933y-ecc-rdimm",
       "sourceDomain": "techyparts.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Grade A tested, ESD packaging.",
       "stockStatus": "In Stock"
     },
@@ -529,7 +529,7 @@
       "warranty": "30-day warranty",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-16gb-pc4-3200aa-rdimm-hma82gr7djr4n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Peak speed DDR4 RDIMM, popular for AMD EPYC Milan 7003 & Ice Lake Xeon.",
       "stockStatus": "In Stock"
     },
@@ -555,7 +555,7 @@
       "warranty": "90-day ServerSupply warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC4-25600/16GB/SAMSUNG/M393A2K40EB3-CWE.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Original Samsung B-die enterprise server memory.",
       "stockStatus": "In Stock"
     },
@@ -581,7 +581,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-2rx4-pc4-2133p-ecc-rdimm-m393a4k40bb0",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "PowerEdge R730 / HPE DL380 Gen9 certified.",
       "stockStatus": "In Stock"
     },
@@ -607,7 +607,7 @@
       "warranty": "60 days",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-32gb-2rx4-pc4-2400t-ecc-rdimm-hma84gr7afr4n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Dell OEM part SNPA1869C/32G equivalent pull.",
       "stockStatus": "In Stock"
     },
@@ -633,7 +633,7 @@
       "warranty": "30-day money back",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-2rx4-pc4-2666v-ecc-rdimm-m393a4k40cb2",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Extremely popular enterprise workhorse capacity and speed.",
       "stockStatus": "In Stock"
     },
@@ -659,7 +659,7 @@
       "warranty": "1 Year Warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-a9781929-32gb-pc4-21300-ddr4-2666-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "PowerEdge R640 / R740 / R840 guaranteed compatibility.",
       "stockStatus": "In Stock"
     },
@@ -686,7 +686,7 @@
       "warranty": "60 days",
       "sourceUrl": "https://www.ebay.com/itm/lot-8-micron-32gb-pc4-2666v-ecc-rdimm-256gb",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Lot unit price $29.50/ea ($0.92/GB). Matching batch codes.",
       "stockStatus": "Bulk Lot Available"
     },
@@ -712,7 +712,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-pc4-2933y-ecc-rdimm-m393a4k40cb2-cvf",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Supports 2nd Gen Intel Xeon Scalable (Cascade Lake) @ 2933 MT/s max.",
       "stockStatus": "In Stock"
     },
@@ -738,7 +738,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-2rx4-pc4-3200aa-ecc-rdimm-m393a4g43ab3",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Sweet spot for 3rd Gen Intel Xeon (Ice Lake) & AMD EPYC 7003.",
       "stockStatus": "In Stock"
     },
@@ -764,7 +764,7 @@
       "warranty": "90-day warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC4-25600/32GB/HYNIX/HMA84GR7CJR4N-XN.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "High reliability C-die server memory module.",
       "stockStatus": "In Stock"
     },
@@ -790,7 +790,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-64gb-4rx4-pc4-2133p-ecc-lrdimm-m386a8k40bm1",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Load-Reduced LRDIMM module. Cisco UCS / HPE ProLiant Gen9 pull.",
       "stockStatus": "In Stock"
     },
@@ -816,7 +816,7 @@
       "warranty": "60-day replacement",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-64gb-pc4-2400t-ecc-lrdimm-hma88gl7afr4n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Dell OEM part SNP4R57EC/64G.",
       "stockStatus": "In Stock"
     },
@@ -842,7 +842,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-64gb-2rx4-pc4-2666v-ecc-rdimm-m393a8g40mb2",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "High density Dual Rank standard RDIMM (no LRDIMM required).",
       "stockStatus": "In Stock"
     },
@@ -868,7 +868,7 @@
       "warranty": "90 days",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC4-21300/64GB/MICRON/MTA36ASF8G72PZ-2G6D1.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Refurbished Grade A, static-free clamshell.",
       "stockStatus": "In Stock"
     },
@@ -894,7 +894,7 @@
       "warranty": "30-day seller guarantee",
       "sourceUrl": "https://www.ebay.com/itm/samsung-64gb-2rx4-pc4-2933y-ecc-rdimm-m393a8g40ab2",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "PowerEdge R740 / R740xd high density memory.",
       "stockStatus": "In Stock"
     },
@@ -920,7 +920,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-64gb-2rx4-pc4-3200aa-ecc-rdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Highest density standard 2Rx4 DDR4 RDIMM. Heavy enterprise demand for virtualization clusters.",
       "stockStatus": "In Stock"
     },
@@ -946,7 +946,7 @@
       "warranty": "1 Year Warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-aa969601-64gb-ddr4-3200-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Dell 15th Gen PowerEdge R750 / R650 replacement part.",
       "stockStatus": "In Stock"
     },
@@ -972,7 +972,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/samsung-16gb-pc5-4800b-ecc-rdimm-m321r2ga3bb6",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Pulled from 4th Gen Xeon Sapphire Rapids / AMD EPYC 9004 server.",
       "stockStatus": "In Stock"
     },
@@ -998,7 +998,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-16gb-pc5-5600b-ecc-rdimm-hmcg66agbra187n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "5th Gen Xeon Emerald Rapids & EPYC 9004 Gen5 speed.",
       "stockStatus": "In Stock"
     },
@@ -1024,7 +1024,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-51200/16GB/MICRON/MTC8C1084S1SC64BD1.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Enterprise server replacement part for Xeon 6 (Granite Rapids / Sierra Forest).",
       "stockStatus": "In Stock"
     },
@@ -1050,7 +1050,7 @@
       "warranty": "Lifetime Kingston Manufacturer / 90-day distributor",
       "sourceUrl": "https://www.itcreations.com/ddr5/kingston-16gb-7200-rdimm",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "New generation high-frequency server tier.",
       "stockStatus": "In Stock"
     },
@@ -1076,7 +1076,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/micron-24gb-pc5-4800b-ecc-rdimm-non-binary",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "24GB non-binary capacity, optimal for 1.5x capacity per socket on modern servers.",
       "stockStatus": "In Stock"
     },
@@ -1102,7 +1102,7 @@
       "warranty": "30-day warranty",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-24gb-pc5-5600b-ecc-rdimm-hmcg78agbra189n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Non-binary 24GB server pull from Dell PowerEdge R760.",
       "stockStatus": "In Stock"
     },
@@ -1128,7 +1128,7 @@
       "warranty": "90 days",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-51200/24GB/SAMSUNG/M321R3GA3BB0-CQK.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "24GB non-binary 6400 MT/s server memory.",
       "stockStatus": "In Stock"
     },
@@ -1154,7 +1154,7 @@
       "warranty": "6 Month Techyparts Warranty",
       "sourceUrl": "https://www.techyparts.com/micron-24gb-ddr5-7200-ecc-rdimm",
       "sourceDomain": "techyparts.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "High speed enterprise testing lab surplus.",
       "stockStatus": "Low Stock"
     },
@@ -1180,7 +1180,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/samsung-32gb-1rx4-pc5-4800b-ecc-rdimm-m321r4ga3bb0",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Dell OEM part number 758M2 / 0758M2. Most active standard DDR5 commodity tier.",
       "stockStatus": "In Stock"
     },
@@ -1206,7 +1206,7 @@
       "warranty": "90 days",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-38400/32GB/HYNIX/HMCG88MEBRA113N.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Grade A enterprise refurbished.",
       "stockStatus": "In Stock"
     },
@@ -1232,7 +1232,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/micron-32gb-pc5-5600b-ecc-rdimm-mtc20f1046s1rc56bd1",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "HPE SmartMemory DDR5-5600 pull (P/N: P64705-B21).",
       "stockStatus": "In Stock"
     },
@@ -1258,7 +1258,7 @@
       "warranty": "1 Year Warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-32gb-ddr5-6400-pc5-51200-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Latest generation server memory certified for PowerEdge 16G.",
       "stockStatus": "In Stock"
     },
@@ -1284,7 +1284,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-32gb-pc5-7200-ecc-rdimm-hmcg84agbra193n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Next-gen enterprise enterprise replacement part for Turin & Granite Rapids.",
       "stockStatus": "Low Stock"
     },
@@ -1310,7 +1310,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-48gb-pc5-4800b-ecc-rdimm-non-binary",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Non-binary 48GB capacity, provides 1.5TB per 32-slot dual socket chassis at low rank count.",
       "stockStatus": "In Stock"
     },
@@ -1336,7 +1336,7 @@
       "warranty": "30-day warranty",
       "sourceUrl": "https://www.ebay.com/itm/micron-48gb-pc5-5600b-ecc-rdimm-mtc30f1046s1rc56bd1",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Lenovo ThinkSystem SR650 V3 server pull.",
       "stockStatus": "In Stock"
     },
@@ -1362,7 +1362,7 @@
       "warranty": "90 days",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-51200/48GB/HYNIX/HMCG98AGBRA191N.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Certified refurbisher tested under full synthetic memory load.",
       "stockStatus": "In Stock"
     },
@@ -1389,7 +1389,7 @@
       "warranty": "90 days B2B warranty",
       "sourceUrl": "https://www.itcreations.com/ddr5/samsung-48gb-7200-lot-4",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Lot of 4x units ($175/ea, $3.65/GB). Factory sealed tray.",
       "stockStatus": "Bulk Lot Available"
     },
@@ -1415,7 +1415,7 @@
       "warranty": "30-day return policy",
       "sourceUrl": "https://www.ebay.com/itm/samsung-64gb-2rx4-pc5-4800b-ecc-rdimm-m321r8ga0bb0",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Standard 64GB DDR5 dual rank enterprise configuration.",
       "stockStatus": "In Stock"
     },
@@ -1441,7 +1441,7 @@
       "warranty": "1 Year Warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-aa969602-64gb-ddr5-4800-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "PowerEdge R760 / R660 Dell Certified memory.",
       "stockStatus": "In Stock"
     },
@@ -1467,7 +1467,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-64gb-pc5-5600b-ecc-rdimm-hmcg94agbra181n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Optimal density & speed for 5th Gen Xeon and AMD Genoa/Bergamo.",
       "stockStatus": "In Stock"
     },
@@ -1493,7 +1493,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-51200/64GB/MICRON/MTC40F2046S1RC64BD1.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Grade A tested, enterprise spare part.",
       "stockStatus": "In Stock"
     },
@@ -1519,7 +1519,7 @@
       "warranty": "6 Month Techyparts Warranty",
       "sourceUrl": "https://www.techyparts.com/samsung-64gb-pc5-57600-ddr5-7200-rdimm",
       "sourceDomain": "techyparts.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Next-gen enterprise server replacement pull.",
       "stockStatus": "In Stock"
     },
@@ -1545,7 +1545,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/samsung-96gb-2rx4-pc5-4800b-ecc-rdimm-non-binary",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "96GB non-binary 2Rx4 module. Enables 1.5TB in 16 DIMM slots without requiring 4DS/3DS stacks.",
       "stockStatus": "In Stock"
     },
@@ -1571,7 +1571,7 @@
       "warranty": "30-day seller warranty",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-96gb-pc5-5600b-ecc-rdimm-hmcgcaagbra183n",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Dell OEM part number pulled from PowerEdge XE9680 AI server.",
       "stockStatus": "In Stock"
     },
@@ -1597,7 +1597,7 @@
       "warranty": "90 days",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-51200/96GB/MICRON/MTC60F2046S1RC64BD1.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Non-binary high capacity enterprise module.",
       "stockStatus": "In Stock"
     },
@@ -1623,7 +1623,7 @@
       "warranty": "Distributor 90-day warranty",
       "sourceUrl": "https://www.itcreations.com/ddr5/kingston-96gb-7200-rdimm",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "High speed enterprise replacement part.",
       "stockStatus": "Low Stock"
     },
@@ -1649,7 +1649,7 @@
       "warranty": "30-day money back guarantee",
       "sourceUrl": "https://www.ebay.com/itm/samsung-128gb-pc5-4800b-3ds-ecc-rdimm-m321rag70bb0",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "3DS stacked die architecture. Pulled from AI training GPU node host system.",
       "stockStatus": "In Stock"
     },
@@ -1675,7 +1675,7 @@
       "warranty": "1 Year Warranty",
       "sourceUrl": "https://www.cpumedics.com/dell-128gb-ddr5-4800-3ds-ecc-rdimm/",
       "sourceDomain": "cpumedics.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Tested in Dell PowerEdge R760xa AI / HPC server chassis.",
       "stockStatus": "In Stock"
     },
@@ -1701,7 +1701,7 @@
       "warranty": "30 days",
       "sourceUrl": "https://www.ebay.com/itm/sk-hynix-128gb-2rx4-pc5-5600b-monolithic-ecc-rdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "New monolithic 32Gb die design (standard 2Rx4, does not require 3DS stack latency).",
       "stockStatus": "In Stock"
     },
@@ -1727,7 +1727,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/PC5-51200/128GB/SAMSUNG/M321R8GA0BB0-CQK.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Certified enterprise spare for Granite Rapids and Turin hyperscale nodes.",
       "stockStatus": "In Stock"
     },
@@ -1753,7 +1753,7 @@
       "warranty": "90-day wholesale distributor warranty",
       "sourceUrl": "https://www.itcreations.com/ddr5/micron-128gb-7200-rdimm",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Premium high-frequency AI/LLM server memory module.",
       "stockStatus": "Low Stock"
     },
@@ -1779,7 +1779,7 @@
       "warranty": "30-day warranty",
       "sourceUrl": "https://www.ebay.com/itm/samsung-256gb-8rx4-pc5-4800b-3ds-ecc-rdimm",
       "sourceDomain": "ebay.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Ultra high density 3DS stacked module. Enables 8TB RAM in a dual-socket 32-DIMM server.",
       "stockStatus": "In Stock"
     },
@@ -1805,7 +1805,7 @@
       "warranty": "6 Month Techyparts Warranty",
       "sourceUrl": "https://www.techyparts.com/sk-hynix-256gb-ddr5-5600-3ds-rdimm",
       "sourceDomain": "techyparts.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Tested in enterprise HPC cluster environment.",
       "stockStatus": "In Stock"
     },
@@ -1831,7 +1831,7 @@
       "warranty": "90-day wholesale distributor warranty",
       "sourceUrl": "https://www.itcreations.com/ddr5/samsung-256gb-6400-3ds-rdimm",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Specialized enterprise order item for large in-memory SAP HANA / AI training infrastructure.",
       "stockStatus": "Low Stock"
     },
@@ -1857,7 +1857,7 @@
       "warranty": "90-day distributor warranty",
       "sourceUrl": "https://www.itcreations.com/ddr5/micron-256gb-7200-3ds-rdimm",
       "sourceDomain": "itcreations.com",
-      "scrapedAt": "2026-08-31T09:33:21.656Z",
+      "scrapedAt": "2026-09-01T04:33:11.501Z",
       "notes": "Top of the line server memory module. Extremely limited quantity.",
       "stockStatus": "Low Stock"
     }
@@ -3309,12 +3309,40 @@
   "cronInfo": {
     "schedule": "0 8 * * *",
     "scheduleDescription": "GitHub Actions workflow triggers daily at 08:00 AM UTC",
-    "lastRun": "2026-08-31T09:33:21.656Z",
+    "lastRun": "2026-09-01T04:33:11.501Z",
     "nextRun": "Managed by GitHub Actions schedule",
     "isRefreshing": false,
     "storageType": "Static JSON on GitHub Pages ($0 Hosting/DB Cost)",
     "totalSkusAudited": 36,
     "recentLogs": [
+      {
+        "timestamp": "2026-09-01T04:33:11.501Z",
+        "type": "SCHEDULED",
+        "status": "SUCCESS",
+        "message": "Recalculated 36 SKUs and updated secondary price floors/ceilings.",
+        "skusUpdated": 36
+      },
+      {
+        "timestamp": "2026-09-01T04:31:52.862Z",
+        "type": "SCHEDULED",
+        "status": "SUCCESS",
+        "message": "Recalculated 36 SKUs and updated secondary price floors/ceilings.",
+        "skusUpdated": 36
+      },
+      {
+        "timestamp": "2026-09-01T04:30:01.160Z",
+        "type": "SCHEDULED",
+        "status": "SUCCESS",
+        "message": "Recalculated 36 SKUs and updated secondary price floors/ceilings.",
+        "skusUpdated": 36
+      },
+      {
+        "timestamp": "2026-09-01T02:08:34.053Z",
+        "type": "SCHEDULED",
+        "status": "SUCCESS",
+        "message": "Recalculated 36 SKUs and updated secondary price floors/ceilings.",
+        "skusUpdated": 36
+      },
       {
         "timestamp": "2026-08-31T09:33:21.656Z",
         "type": "SCHEDULED",
