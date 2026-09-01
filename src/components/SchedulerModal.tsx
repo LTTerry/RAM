@@ -169,9 +169,20 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                   <span className="text-emerald-400 font-bold">{cronInfo?.ebayRecordsSuccess ?? cronInfo?.totalSkusAudited ?? 36} / {cronInfo?.totalSkusAudited ?? 36} SKUs</span>
                 </div>
                 <div className="flex items-center justify-between font-mono">
-                  <span className="text-slate-300">Realistic API Source:</span>
-                  <span className="text-indigo-300 font-semibold">{cronInfo?.dataSource || 'eBay Production API'}</span>
+                  <span className="text-slate-300">Data Pipeline:</span>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
+                    cronInfo?.dataSource?.includes('eBay')
+                      ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
+                      : 'text-amber-300 bg-amber-500/10 border-amber-500/20'
+                  }`}>
+                    {cronInfo?.dataSource || 'Gemini Fallback Search'}
+                  </span>
                 </div>
+                {cronInfo?.dataSource?.includes('Gemini') && (
+                  <p className="text-[10px] text-amber-400/90 pt-1 leading-relaxed border-t border-slate-800/60 mt-1">
+                    eBay API credentials (<code className="text-amber-200">EBAY_APP_ID</code> / <code className="text-amber-200">EBAY_CERT_ID</code>) were not detected or connected during the last run, so Gemini Search Grounding was used.
+                  </p>
+                )}
               </div>
 
               <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800/60 space-y-1.5">
