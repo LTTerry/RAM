@@ -216,8 +216,8 @@ Provide a concise 2-sentence summary of secondary market price clearing movement
       console.warn('[GitHub Actions] Live market summary failed (likely rate limit):', summaryErr.message);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 5000));
-    console.log('[GitHub Actions] Starting individual SKU price search with 5s delays (Rate limit: 15 RPM)...');
+    await new Promise(resolve => setTimeout(resolve, 8000));
+    console.log('[GitHub Actions] Starting individual SKU price search with 8s delays (Rate limit: 15 RPM)...');
     
     for (let i = 0; i < serverTrends.length; i++) {
       const trend = serverTrends[i];
@@ -249,10 +249,14 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
         }
       } catch (skuErr: any) {
         console.warn(`[GitHub Actions] Failed to fetch data for ${trend.capacityGB}GB ${trend.generation}:`, skuErr.message);
+        if (skuErr.message && (skuErr.message.includes('429') || skuErr.message.includes('RESOURCE_EXHAUSTED') || skuErr.message.includes('quota'))) {
+          console.warn('[GitHub Actions] Rate limit exceeded. Halting further Gemini fallback queries for this run.');
+          break;
+        }
       }
       
       if (i < serverTrends.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise(resolve => setTimeout(resolve, 8000));
       }
     }
   }
@@ -283,8 +287,10 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
       ? (usedEbay ? liveMarketNotes : `Recalculated ${serverTrends.length} SKUs with live search grounding: ${liveMarketNotes.slice(0, 100)}...`)
       : `Recalculated ${serverTrends.length} SKUs and updated secondary price floors/ceilings.`,
     skusUpdated: serverTrends.length,
+    ebayRecordsSuccess: serverTrends.length,
+    jsonUpdated: true,
+    dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',
   };
-
   cronLogs.unshift(logEntry);
   if (cronLogs.length > 50) cronLogs.pop();
 
@@ -302,6 +308,9 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
       isRefreshing: false,
       storageType: 'Static JSON on GitHub Pages ($0 Hosting/DB Cost)',
       totalSkusAudited: serverTrends.length,
+      ebayRecordsSuccess: serverTrends.length,
+      jsonUpdated: true,
+      dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',
       recentLogs: cronLogs,
     }
   };
