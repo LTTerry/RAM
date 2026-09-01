@@ -131,7 +131,7 @@ export default function App() {
                       className="bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
                     >
                       <Activity className="w-3.5 h-3.5" />
-                      Daily 8:00 AM Cron Engine
+                      Daily 8:00 AM (UTC+8) Cron Engine
                     </button>
                   </div>
                 </div>
@@ -143,7 +143,7 @@ export default function App() {
                   <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest opacity-80 mb-2">
                     <span>Automated Backend Engine</span>
                     <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] flex items-center gap-1 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span> 08:00 AM DAILY
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span> 08:00 AM UTC+8 DAILY
                     </span>
                   </div>
                   <div className="text-2xl font-mono font-bold">
@@ -199,7 +199,7 @@ export default function App() {
               onClick={() => setIsSchedulerOpen(true)}
               className="text-emerald-400 hover:text-emerald-300 underline font-medium"
             >
-              8:00 AM Cron Status
+              8:00 AM UTC+8 Cron Status
             </button>
             <span>•</span>
             <button

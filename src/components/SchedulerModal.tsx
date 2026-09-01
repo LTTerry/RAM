@@ -64,6 +64,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
     try {
       const d = new Date(isoString);
       return d.toLocaleString('en-US', {
+        timeZone: 'Asia/Hong_Kong',
         weekday: 'short',
         month: 'short',
         day: 'numeric',
@@ -71,7 +72,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
-      });
+      }) + ' HKT';
     } catch {
       return isoString;
     }
@@ -100,7 +101,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Zero-cost static architecture running daily at 08:00 AM UTC
+                Zero-cost static architecture running daily at 08:00 AM UTC+8 (Hong Kong Time)
               </p>
             </div>
           </div>
@@ -120,9 +121,9 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cron Schedule</span>
               <div className="mt-2 text-sm font-mono font-bold text-white flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-indigo-400" />
-                <span>Daily @ 08:00 AM</span>
+                <span>Daily @ 08:00 AM (UTC+8)</span>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono mt-1">workflow: 0 8 * * *</span>
+              <span className="text-[10px] text-slate-500 font-mono mt-1">workflow: 0 0 * * * (00:00 UTC)</span>
             </div>
 
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
@@ -131,7 +132,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 <Clock className="w-4 h-4 text-amber-400" />
                 <span>Automated via GitHub</span>
               </div>
-              <span className="text-[10px] text-slate-500 font-mono mt-1">Timezone: UTC</span>
+              <span className="text-[10px] text-slate-500 font-mono mt-1">Timezone: UTC+8 (Hong Kong Time)</span>
             </div>
           </div>
 
@@ -195,7 +196,19 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 </div>
                 <div className="flex items-center justify-between font-mono">
                   <span className="text-slate-300">Last Sync Time:</span>
-                  <span className="text-slate-300 text-[10px]">{cronInfo?.lastRun ? new Date(cronInfo.lastRun).toLocaleString() : 'Recently synced'}</span>
+                  <span className="text-slate-300 text-[10px]">
+                    {cronInfo?.lastRun 
+                      ? new Date(cronInfo.lastRun).toLocaleString('en-US', {
+                          timeZone: 'Asia/Hong_Kong',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        }) + ' (UTC+8)'
+                      : 'Recently synced'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -240,7 +253,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 ))
               ) : (
                 <div className="p-4 text-center text-slate-500 text-xs">
-                  Background cron initialized. Scheduled for daily 8:00 AM cycle.
+                  Background cron initialized. Scheduled for daily 8:00 AM UTC+8 (Hong Kong Time) cycle.
                 </div>
               )}
             </div>

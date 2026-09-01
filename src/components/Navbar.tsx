@@ -50,10 +50,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onOpenScheduler}
             className="hidden sm:flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 px-2.5 py-0.5 rounded-full transition-colors font-sans text-[11px] font-medium"
-            title="View Daily 8:00 AM Cron Schedule & Audit Logs"
+            title="View Daily 8:00 AM (UTC+8) Cron Schedule & Audit Logs"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Daily 8:00 AM Auto-Refresh (Active)</span>
+            <span>Daily 8:00 AM (UTC+8) Auto-Refresh (Active)</span>
           </button>
 
           <span className="text-slate-400 hidden lg:inline">

@@ -83,31 +83,42 @@ async function searchEbayPrices(token: string, trend: any) {
   return null;
 }
 
-// Format current time into human-friendly strings
+// Format current time into human-friendly strings in UTC+8 (Hong Kong Time)
 function getFormattedTimeMetadata() {
   const now = new Date();
   
-  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  
-  const dayName = days[now.getDay()];
-  const monthName = months[now.getMonth()];
-  const dateNum = now.getDate();
-  const year = now.getFullYear();
-  
-  let hours = now.getHours();
-  const minutes = now.getMinutes();
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  hours = hours % 12;
-  hours = hours ? hours : 12; // '0' becomes '12'
-  const strMinutes = minutes < 10 ? '0' + minutes : minutes;
-  const strHours = hours < 10 ? '0' + hours : hours;
-  
+  // Format accurately in Asia/Hong_Kong (UTC+8) timezone
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Hong_Kong',
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  const parts = formatter.formatToParts(now);
+  const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
+
+  const dayName = getPart('weekday');
+  const monthName = getPart('month');
+  const dateNum = getPart('day');
+  const year = getPart('year');
+  const hour = getPart('hour');
+  const minute = getPart('minute');
+  const dayPeriod = getPart('dayPeriod'); // AM or PM
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthIndex = monthNames.indexOf(monthName);
+  const quarter = monthIndex !== -1 ? Math.floor(monthIndex / 3) + 1 : 3;
+
   const lastUpdatedDate = `${monthName} ${dateNum}, ${year}`;
   const lastUpdatedDay = dayName;
-  const lastUpdatedTime = `${strHours}:${strMinutes} ${ampm}`;
-  const timezone = 'UTC'; // GitHub actions runs in UTC by default
-  const formattedFullTimestamp = `${dayName}, ${monthName} ${dateNum}, ${year} at ${strHours}:${strMinutes} ${ampm} (${timezone})`;
+  const lastUpdatedTime = `${hour}:${minute} ${dayPeriod}`;
+  const timezone = 'UTC+8 (Hong Kong Time)';
+  const formattedFullTimestamp = `${dayName}, ${monthName} ${dateNum}, ${year} at ${hour}:${minute} ${dayPeriod} (UTC+8)`;
   
   return {
     lastUpdatedDate,
@@ -115,7 +126,7 @@ function getFormattedTimeMetadata() {
     lastUpdatedTime,
     timezone,
     formattedFullTimestamp,
-    researchQuarter: `Q${Math.floor(now.getMonth() / 3) + 1} ${year}`,
+    researchQuarter: `Q${quarter} ${year}`,
   };
 }
 
@@ -301,8 +312,8 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
     trends: serverTrends,
     ebaySold: serverEbaySold,
     cronInfo: {
-      schedule: '0 8 * * *',
-      scheduleDescription: 'GitHub Actions workflow triggers daily at 08:00 AM UTC',
+      schedule: '0 0 * * *',
+      scheduleDescription: 'GitHub Actions workflow triggers daily at 08:00 AM UTC+8 (00:00 UTC)',
       lastRun: nowIso,
       nextRun: 'Managed by GitHub Actions schedule',
       isRefreshing: false,
