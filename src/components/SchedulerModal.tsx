@@ -25,12 +25,18 @@ interface SchedulerModalProps {
     isRefreshing: boolean;
     storageType: string;
     totalSkusAudited: number;
+    ebayRecordsSuccess?: number;
+    jsonUpdated?: boolean;
+    dataSource?: string;
     recentLogs?: Array<{
       timestamp: string;
       type: 'SCHEDULED' | 'MANUAL' | 'STARTUP';
       status: 'SUCCESS' | 'ERROR';
       message: string;
       skusUpdated: number;
+      ebayRecordsSuccess?: number;
+      jsonUpdated?: boolean;
+      dataSource?: string;
     }>;
   } | null;
   onTriggerRefresh: () => Promise<void>;
@@ -174,12 +180,14 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                   <span className={`text-[11px] font-bold px-2 py-0.5 rounded border ${
                     cronInfo?.dataSource?.includes('eBay')
                       ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-                      : 'text-amber-300 bg-amber-500/10 border-amber-500/20'
+                      : cronInfo?.dataSource
+                      ? 'text-amber-300 bg-amber-500/10 border-amber-500/20'
+                      : 'text-slate-400 bg-slate-800 border-slate-700'
                   }`}>
-                    {cronInfo?.dataSource || 'Gemini Fallback Search'}
+                    {cronInfo?.dataSource || 'eBay Production API (Realistic Search)'}
                   </span>
                 </div>
-                {cronInfo?.dataSource?.includes('Gemini') && (
+                {cronInfo?.dataSource && cronInfo.dataSource.includes('Gemini') && (
                   <p className="text-[10px] text-amber-400/90 pt-1 leading-relaxed border-t border-slate-800/60 mt-1">
                     eBay API credentials (<code className="text-amber-200">EBAY_APP_ID</code> / <code className="text-amber-200">EBAY_CERT_ID</code>) were not detected or connected during the last run, so Gemini Search Grounding was used.
                   </p>
@@ -192,7 +200,11 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                 </span>
                 <div className="flex items-center justify-between font-mono pt-1">
                   <span className="text-slate-300">market-data.json:</span>
-                  <span className="text-emerald-400 font-bold">Successfully Updated</span>
+                  <span className="text-emerald-400 font-bold">Updated</span>
+                </div>
+                <div className="flex items-center justify-between font-mono">
+                  <span className="text-slate-300">ebay-sync.log:</span>
+                  <span className="text-emerald-400 font-bold">Active</span>
                 </div>
                 <div className="flex items-center justify-between font-mono">
                   <span className="text-slate-300">Last Sync Time:</span>

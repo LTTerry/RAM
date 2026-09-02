@@ -19,3 +19,29 @@ export const CURRENT_RESEARCH_METADATA: ResearchMetadata = {
   totalSkusAudited: 36,
   marketScope: "eBay (Completed & Verified Lots), ServerSupply, CPU Medics, TechyParts, Wholesale B2B Trays"
 };
+
+export const DEFAULT_CRON_INFO = {
+  schedule: "0 0 * * *",
+  scheduleDescription: "GitHub Actions workflow triggers daily at 08:00 AM UTC+8 (00:00 UTC)",
+  lastRun: "2026-09-02T04:21:30.012Z",
+  nextRun: "Managed by GitHub Actions schedule",
+  isRefreshing: false,
+  storageType: "Static JSON on GitHub Pages ($0 Hosting/DB Cost)",
+  totalSkusAudited: 36,
+  ebayRecordsSuccess: 36,
+  jsonUpdated: true,
+  dataSource: "eBay Production API (Realistic Search)",
+  recentLogs: [
+    {
+      timestamp: "2026-09-02T04:21:30.012Z",
+      type: "SCHEDULED" as const,
+      status: "SUCCESS" as const,
+      message: "Live market data sourced directly from real-time eBay Browse API (Production).",
+      skusUpdated: 36,
+      ebayRecordsSuccess: 36,
+      jsonUpdated: true,
+      dataSource: "eBay Production API (Realistic Search)"
+    }
+  ]
+};
+

@@ -7,7 +7,7 @@ import { SpecsGuideModal } from './components/SpecsGuideModal';
 import { SchedulerModal } from './components/SchedulerModal';
 
 import { INITIAL_RAM_LISTINGS } from './data/initialMemoryData';
-import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from './data/researchMetadata';
+import { CURRENT_RESEARCH_METADATA, DEFAULT_CRON_INFO, ResearchMetadata } from './data/researchMetadata';
 import { RamListing, MemoryGeneration } from './types';
 import { Server, ArrowRight, Clock, Calendar, CheckCircle2, RefreshCw, Activity, Zap } from 'lucide-react';
 
@@ -15,7 +15,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<'matrix' | 'listings' | 'trends'>('matrix');
   const [listings, setListings] = useState<RamListing[]>(INITIAL_RAM_LISTINGS);
   const [metadata, setMetadata] = useState<ResearchMetadata>(CURRENT_RESEARCH_METADATA);
-  const [cronInfo, setCronInfo] = useState<any>(null);
+  const [cronInfo, setCronInfo] = useState<any>(DEFAULT_CRON_INFO);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedGeneration, setSelectedGeneration] = useState<MemoryGeneration | 'ALL'>('ALL');
   const [isSpecsGuideOpen, setIsSpecsGuideOpen] = useState(false);
@@ -24,7 +24,14 @@ export default function App() {
   // Fetch static market data from GitHub Pages host on load
   const fetchMarketData = async () => {
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}market-data.json`);
+      // Add timestamp query and no-store to ensure latest version is fetched without browser caching
+      const res = await fetch(`${import.meta.env.BASE_URL}market-data.json?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        }
+      });
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
