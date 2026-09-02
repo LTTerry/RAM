@@ -12,6 +12,18 @@ import { CURRENT_RESEARCH_METADATA } from '../src/data/researchMetadata.js';
 dotenv.config();
 
 const DATA_FILE = path.join(process.cwd(), 'public', 'market-data.json');
+const EBAY_LOG_FILE = path.join(process.cwd(), 'public', 'ebay-sync.log');
+
+function logSyncMessage(msg: string) {
+  const timestamp = new Date().toISOString();
+  const formattedMsg = `[${timestamp}] ${msg}\n`;
+  console.log(`[eBay Sync Log] ${msg}`);
+  try {
+    fs.appendFileSync(EBAY_LOG_FILE, formattedMsg, 'utf-8');
+  } catch (err) {
+    console.warn('[eBay Sync Log] Could not append to ebay-sync.log:', err);
+  }
+}
 
 // Get AI client if available
 function getGenAIClient(): GoogleGenAI | null {
@@ -225,6 +237,10 @@ async function updateMarketData() {
   
   let liveMarketNotes = '';
   let usedEbay = false;
+  let skuSuccessCount = 0;
+  let skuFailCount = 0;
+
+  logSyncMessage(`=== SYNC STARTED: Querying secondary server memory market data (${serverTrends.length} SKUs) ===`);
 
   // 1. Try eBay API First
   if (ebayAppId && ebayCertId) {
@@ -235,10 +251,12 @@ async function updateMarketData() {
       usedEbay = true;
       liveMarketNotes = "Live market data sourced directly from real-time eBay Browse API (Production).";
       console.log('[GitHub Actions] Successfully authenticated with eBay API.');
+      logSyncMessage(`Authenticated with eBay Production API. Processing ${serverTrends.length} SKUs...`);
       
       for (let i = 0; i < serverTrends.length; i++) {
         const trend = serverTrends[i];
-        console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length} via eBay: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
+        const skuLabel = `${trend.generation} ${trend.capacityGB}GB ${trend.speedMTs}MT/s ECC RDIMM`;
+        console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length} via eBay: ${skuLabel}...`);
         
         try {
           const prices = await searchEbayPrices(token, trend);
@@ -246,9 +264,16 @@ async function updateMarketData() {
             trend.currentAvgPrice = prices.currentAvgPrice;
             trend.lowestAskingCurrent = prices.lowestAskingCurrent;
             trend.highestAskingCurrent = prices.highestAskingCurrent;
+            skuSuccessCount++;
+            logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: SUCCESS - Avg: $${prices.currentAvgPrice.toFixed(2)} (Range: $${prices.lowestAskingCurrent.toFixed(2)} - $${prices.highestAskingCurrent.toFixed(2)})`);
+          } else {
+            skuFailCount++;
+            logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: FAILURE - No active listings found on eBay`);
           }
         } catch (e: any) {
-          console.warn(`[GitHub Actions] eBay search failed for ${trend.capacityGB}GB ${trend.generation}:`, e.message);
+          skuFailCount++;
+          console.warn(`[GitHub Actions] eBay search failed for ${skuLabel}:`, e.message);
+          logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: FAILURE - Error: ${e.message || e}`);
         }
         
         // Brief 500ms delay to respect eBay Browse API rate limits
@@ -256,14 +281,17 @@ async function updateMarketData() {
       }
     } else {
       console.warn('[GitHub Actions] eBay API token authentication failed. Falling back to Gemini search if available.');
+      logSyncMessage(`eBay API OAuth authentication failed. Falling back to Gemini search.`);
     }
   } else {
     console.warn('[GitHub Actions] EBAY_APP_ID / EBAY_CERT_ID environment variables are not set or empty.');
+    logSyncMessage(`eBay API credentials not configured. Falling back to Gemini search.`);
   }
 
   // 2. Fallback to Gemini AI if eBay API isn't configured or failed
   if (!usedEbay && ai) {
     console.log('[GitHub Actions] Querying live secondary market intelligence via Gemini Search (Fallback)...');
+    logSyncMessage(`Starting Gemini AI search grounding fallback for ${serverTrends.length} SKUs...`);
     
     try {
       const searchPrompt = `
@@ -286,7 +314,8 @@ Provide a concise 2-sentence summary of secondary market price clearing movement
     
     for (let i = 0; i < serverTrends.length; i++) {
       const trend = serverTrends[i];
-      console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length}: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs}...`);
+      const skuLabel = `${trend.generation} ${trend.capacityGB}GB ${trend.speedMTs}MT/s ECC RDIMM`;
+      console.log(`[GitHub Actions] Checking SKU ${i + 1}/${serverTrends.length}: ${skuLabel}...`);
       
       try {
         const skuPrompt = `
@@ -311,11 +340,19 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
            if (parsed.currentAvgPrice) trend.currentAvgPrice = Number(parsed.currentAvgPrice);
            if (parsed.lowestAskingCurrent) trend.lowestAskingCurrent = Number(parsed.lowestAskingCurrent);
            if (parsed.highestAskingCurrent) trend.highestAskingCurrent = Number(parsed.highestAskingCurrent);
+           skuSuccessCount++;
+           logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: SUCCESS - Avg: $${trend.currentAvgPrice.toFixed(2)} (Range: $${trend.lowestAskingCurrent.toFixed(2)} - $${trend.highestAskingCurrent.toFixed(2)})`);
+        } else {
+           skuFailCount++;
+           logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: FAILURE - Empty model response`);
         }
       } catch (skuErr: any) {
-        console.warn(`[GitHub Actions] Failed to fetch data for ${trend.capacityGB}GB ${trend.generation}:`, skuErr.message);
+        skuFailCount++;
+        console.warn(`[GitHub Actions] Failed to fetch data for ${skuLabel}:`, skuErr.message);
+        logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: FAILURE - Error: ${skuErr.message || skuErr}`);
         if (skuErr.message && (skuErr.message.includes('429') || skuErr.message.includes('RESOURCE_EXHAUSTED') || skuErr.message.includes('quota'))) {
           console.warn('[GitHub Actions] Rate limit exceeded. Halting further Gemini fallback queries for this run.');
+          logSyncMessage(`[RATE LIMIT] Halting further queries due to quota limit.`);
           break;
         }
       }
@@ -347,12 +384,12 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
   const logEntry = {
     timestamp: nowIso,
     type: 'SCHEDULED',
-    status: 'SUCCESS',
+    status: skuFailCount === 0 ? 'SUCCESS' : skuSuccessCount > 0 ? 'PARTIAL' : 'ERROR',
     message: liveMarketNotes
       ? (usedEbay ? liveMarketNotes : `Recalculated ${serverTrends.length} SKUs with live search grounding: ${liveMarketNotes.slice(0, 100)}...`)
       : `Recalculated ${serverTrends.length} SKUs and updated secondary price floors/ceilings.`,
     skusUpdated: serverTrends.length,
-    ebayRecordsSuccess: serverTrends.length,
+    ebayRecordsSuccess: skuSuccessCount,
     jsonUpdated: true,
     dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',
   };
@@ -373,7 +410,7 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
       isRefreshing: false,
       storageType: 'Static JSON on GitHub Pages ($0 Hosting/DB Cost)',
       totalSkusAudited: serverTrends.length,
-      ebayRecordsSuccess: serverTrends.length,
+      ebayRecordsSuccess: skuSuccessCount,
       jsonUpdated: true,
       dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',
       recentLogs: cronLogs,
@@ -383,14 +420,7 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
   fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf-8');
   console.log(`[GitHub Actions] Successfully updated ${DATA_FILE}`);
 
-  const EBAY_LOG_FILE = path.join(process.cwd(), 'public', 'ebay-sync.log');
-  const logMessage = `[${nowIso}] - Status: ${usedEbay ? 'SUCCESS' : 'FAILED / FALLBACK'} - Source: ${usedEbay ? 'eBay Production API' : 'Gemini Fallback Search'}\n`;
-  try {
-    fs.appendFileSync(EBAY_LOG_FILE, logMessage, 'utf-8');
-    console.log(`[GitHub Actions] Appended to ${EBAY_LOG_FILE}`);
-  } catch (err) {
-    console.warn('[GitHub Actions] Could not append to ebay-sync.log:', err);
-  }
+  logSyncMessage(`=== SYNC FINISHED - Total SKUs: ${serverTrends.length}, Success: ${skuSuccessCount}, Failed: ${skuFailCount} - Source: ${usedEbay ? 'eBay Production API' : 'Gemini Fallback Search'} - Overall: ${skuFailCount === 0 ? 'SUCCESS' : skuSuccessCount > 0 ? 'PARTIAL SUCCESS' : 'FAILED'} ===`);
 }
 
 updateMarketData().catch(err => {
