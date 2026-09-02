@@ -328,6 +328,15 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
 
   fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf-8');
   console.log(`[GitHub Actions] Successfully updated ${DATA_FILE}`);
+
+  const EBAY_LOG_FILE = path.join(process.cwd(), 'public', 'ebay-sync.log');
+  const logMessage = `[${nowIso}] - Status: ${usedEbay ? 'SUCCESS' : 'FAILED / FALLBACK'} - Source: ${usedEbay ? 'eBay Production API' : 'Gemini Fallback Search'}\n`;
+  try {
+    fs.appendFileSync(EBAY_LOG_FILE, logMessage, 'utf-8');
+    console.log(`[GitHub Actions] Appended to ${EBAY_LOG_FILE}`);
+  } catch (err) {
+    console.warn('[GitHub Actions] Could not append to ebay-sync.log:', err);
+  }
 }
 
 updateMarketData().catch(err => {
