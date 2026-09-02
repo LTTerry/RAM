@@ -19,6 +19,8 @@ concurrency:
 
 jobs:
   build:
+    environment:
+      name: github-pages
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -38,10 +40,12 @@ jobs:
         run: npm run update-data
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
-          EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
-          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID }}
-          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET }}
+          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID || secrets.EBAY_CLIENT_ID || secrets.EBAY_APPID || secrets.EBAY_CLIENTID || secrets.EBAY_KEY }}
+          EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID || secrets.EBAY_CLIENT_SECRET || secrets.EBAY_CERTID || secrets.EBAY_SECRET || secrets.EBAY_CERT }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID || secrets.EBAY_APP_ID || secrets.EBAY_APPID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET || secrets.EBAY_CERT_ID || secrets.EBAY_SECRET }}
+          EBAY_APPID: ${{ secrets.EBAY_APPID || secrets.EBAY_APP_ID }}
+          EBAY_CERTID: ${{ secrets.EBAY_CERTID || secrets.EBAY_CERT_ID }}
 
       - name: Commit Updated Market Data
         run: |

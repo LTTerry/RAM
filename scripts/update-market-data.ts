@@ -198,16 +198,37 @@ async function updateMarketData() {
     totalSkusAudited: serverTrends.length,
   };
 
-  const ebayAppId = (process.env.EBAY_APP_ID || process.env.EBAY_CLIENT_ID || '').trim();
-  const ebayCertId = (process.env.EBAY_CERT_ID || process.env.EBAY_CLIENT_SECRET || '').trim();
+  const ebayAppId = (
+    process.env.EBAY_APP_ID ||
+    process.env.EBAY_CLIENT_ID ||
+    process.env.EBAY_APPID ||
+    process.env.EBAY_CLIENTID ||
+    process.env.EBAY_KEY ||
+    ''
+  ).trim();
+
+  const ebayCertId = (
+    process.env.EBAY_CERT_ID ||
+    process.env.EBAY_CLIENT_SECRET ||
+    process.env.EBAY_CERTID ||
+    process.env.EBAY_SECRET ||
+    process.env.EBAY_CERT ||
+    ''
+  ).trim();
+
   const ai = getGenAIClient();
+  
+  console.log(`[GitHub Actions Diagnostics] Environment variables check:
+  - EBAY_APP_ID: ${ebayAppId ? `FOUND (length: ${ebayAppId.length}, starts with: ${ebayAppId.slice(0, 4)}...)` : 'NOT SET / EMPTY'}
+  - EBAY_CERT_ID: ${ebayCertId ? `FOUND (length: ${ebayCertId.length}, starts with: ${ebayCertId.slice(0, 4)}...)` : 'NOT SET / EMPTY'}
+  - GEMINI_API_KEY: ${process.env.GEMINI_API_KEY ? `FOUND (length: ${process.env.GEMINI_API_KEY.length})` : 'NOT SET / EMPTY'}`);
   
   let liveMarketNotes = '';
   let usedEbay = false;
 
   // 1. Try eBay API First
   if (ebayAppId && ebayCertId) {
-    console.log(`[GitHub Actions] eBay Production Credentials found (App ID: ${ebayAppId.slice(0, 5)}..., Cert ID: ${ebayCertId.slice(0, 3)}...). Connecting to Real eBay API...`);
+    console.log(`[GitHub Actions] eBay Production Credentials found. Connecting to Real eBay API...`);
     const token = await getEbayToken(ebayAppId, ebayCertId);
     
     if (token) {
