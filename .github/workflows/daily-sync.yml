@@ -38,8 +38,10 @@ jobs:
         run: npm run update-data
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
-          EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
+          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID || secrets.EBAY_CLIENT_ID }}
+          EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID || secrets.EBAY_CLIENT_SECRET }}
+          EBAY_CLIENT_ID: ${{ secrets.EBAY_CLIENT_ID || secrets.EBAY_APP_ID }}
+          EBAY_CLIENT_SECRET: ${{ secrets.EBAY_CLIENT_SECRET || secrets.EBAY_CERT_ID }}
 
       - name: Commit Updated Market Data
         run: |

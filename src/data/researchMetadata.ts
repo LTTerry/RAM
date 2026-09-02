@@ -23,7 +23,7 @@ export const CURRENT_RESEARCH_METADATA: ResearchMetadata = {
 export const DEFAULT_CRON_INFO = {
   schedule: "0 0 * * *",
   scheduleDescription: "GitHub Actions workflow triggers daily at 08:00 AM UTC+8 (00:00 UTC)",
-  lastRun: "2026-09-02T04:21:30.012Z",
+  lastRun: "2026-09-02T04:54:53.946Z",
   nextRun: "Managed by GitHub Actions schedule",
   isRefreshing: false,
   storageType: "Static JSON on GitHub Pages ($0 Hosting/DB Cost)",
@@ -33,7 +33,7 @@ export const DEFAULT_CRON_INFO = {
   dataSource: "eBay Production API (Realistic Search)",
   recentLogs: [
     {
-      timestamp: "2026-09-02T04:21:30.012Z",
+      timestamp: "2026-09-02T04:54:53.946Z",
       type: "SCHEDULED" as const,
       status: "SUCCESS" as const,
       message: "Live market data sourced directly from real-time eBay Browse API (Production).",

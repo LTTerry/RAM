@@ -20,28 +20,42 @@ function getGenAIClient(): GoogleGenAI | null {
   return new GoogleGenAI({ apiKey });
 }
 
-// Get eBay Token
+// Get eBay Token with robust parameter handling and diagnostics
 async function getEbayToken(appId: string, certId: string): Promise<string | null> {
+  const cleanAppId = appId.trim();
+  const cleanCertId = certId.trim();
+  
+  if (!cleanAppId || !cleanCertId) {
+    console.warn('[eBay API] Missing App ID or Cert ID');
+    return null;
+  }
+
   try {
-    const credentials = Buffer.from(`${appId}:${certId}`).toString('base64');
+    const credentials = Buffer.from(`${cleanAppId}:${cleanCertId}`).toString('base64');
+    const bodyParams = new URLSearchParams({
+      grant_type: 'client_credentials',
+      scope: 'https://api.ebay.com/oauth/api_scope'
+    });
+
     const response = await fetch('https://api.ebay.com/identity/v1/oauth2/token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': `Basic ${credentials}`
       },
-      body: 'grant_type=client_credentials&scope=https://api.ebay.com/oauth/api_scope'
+      body: bodyParams.toString()
     });
     
     if (!response.ok) {
-      console.warn('[eBay API] Failed to get token:', response.statusText);
+      const errorBody = await response.text();
+      console.warn(`[eBay API] Failed to get OAuth token (HTTP ${response.status} ${response.statusText}):`, errorBody);
       return null;
     }
     
     const data = await response.json();
     return data.access_token || null;
-  } catch (error) {
-    console.warn('[eBay API] Error fetching token:', error);
+  } catch (error: any) {
+    console.warn('[eBay API] Network exception fetching OAuth token:', error.message || error);
     return null;
   }
 }
@@ -50,16 +64,31 @@ async function getEbayToken(appId: string, certId: string): Promise<string | nul
 async function searchEbayPrices(token: string, trend: any) {
   const q = encodeURIComponent(`${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM`);
   const filter = encodeURIComponent('conditionIds:{3000|2000|2500}');
-  const url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=${filter}&limit=10`;
   
-  const response = await fetch(url, {
+  // Try with condition filter first
+  let url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&filter=${filter}&limit=10`;
+  let response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${token}`,
       'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
     }
   });
+
+  // Fallback to query without condition filter if needed
+  if (!response.ok) {
+    url = `https://api.ebay.com/buy/browse/v1/item_summary/search?q=${q}&limit=10`;
+    response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'X-EBAY-C-MARKETPLACE-ID': 'EBAY_US'
+      }
+    });
+  }
   
-  if (!response.ok) throw new Error(`eBay API error: ${response.statusText}`);
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`eBay API HTTP ${response.status}: ${errText.slice(0, 100)}`);
+  }
   
   const data = await response.json();
   if (data.itemSummaries && data.itemSummaries.length > 0) {
@@ -169,8 +198,8 @@ async function updateMarketData() {
     totalSkusAudited: serverTrends.length,
   };
 
-  const ebayAppId = process.env.EBAY_APP_ID;
-  const ebayCertId = process.env.EBAY_CERT_ID;
+  const ebayAppId = (process.env.EBAY_APP_ID || process.env.EBAY_CLIENT_ID || '').trim();
+  const ebayCertId = (process.env.EBAY_CERT_ID || process.env.EBAY_CLIENT_SECRET || '').trim();
   const ai = getGenAIClient();
   
   let liveMarketNotes = '';
@@ -178,7 +207,7 @@ async function updateMarketData() {
 
   // 1. Try eBay API First
   if (ebayAppId && ebayCertId) {
-    console.log('[GitHub Actions] eBay Production Credentials found. Connecting to Real eBay API...');
+    console.log(`[GitHub Actions] eBay Production Credentials found (App ID: ${ebayAppId.slice(0, 5)}..., Cert ID: ${ebayCertId.slice(0, 3)}...). Connecting to Real eBay API...`);
     const token = await getEbayToken(ebayAppId, ebayCertId);
     
     if (token) {
@@ -204,7 +233,11 @@ async function updateMarketData() {
         // Brief 500ms delay to respect eBay Browse API rate limits
         await new Promise(resolve => setTimeout(resolve, 500));
       }
+    } else {
+      console.warn('[GitHub Actions] eBay API token authentication failed. Falling back to Gemini search if available.');
     }
+  } else {
+    console.warn('[GitHub Actions] EBAY_APP_ID / EBAY_CERT_ID environment variables are not set or empty.');
   }
 
   // 2. Fallback to Gemini AI if eBay API isn't configured or failed
