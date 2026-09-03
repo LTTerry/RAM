@@ -10,11 +10,11 @@ export interface ResearchMetadata {
 }
 
 export const CURRENT_RESEARCH_METADATA: ResearchMetadata = {
-  lastUpdatedDate: "September 1, 2026",
-  lastUpdatedDay: "Tuesday",
-  lastUpdatedTime: "11:46 PM",
+  lastUpdatedDate: "September 3, 2026",
+  lastUpdatedDay: "Thursday",
+  lastUpdatedTime: "08:02 AM",
   timezone: "UTC+8 (Hong Kong Time)",
-  formattedFullTimestamp: "Tuesday, September 1, 2026 at 11:46 PM (UTC+8)",
+  formattedFullTimestamp: "Thursday, September 3, 2026 at 08:02 AM (UTC+8)",
   researchQuarter: "Q3 2026",
   totalSkusAudited: 36,
   marketScope: "eBay (Completed & Verified Lots), ServerSupply, CPU Medics, TechyParts, Wholesale B2B Trays"

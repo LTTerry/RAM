@@ -7,14 +7,17 @@ import {
   Clock,
   Calendar,
   Layers,
-  Activity
+  Activity,
+  Building2
 } from 'lucide-react';
 import { ResearchMetadata } from '../data/researchMetadata';
 
 interface NavbarProps {
-  activeTab: 'matrix' | 'listings' | 'trends';
-  setActiveTab: (tab: 'matrix' | 'listings' | 'trends') => void;
+  activeTab: 'matrix' | 'listings' | 'curated' | 'trends';
+  setActiveTab: (tab: 'matrix' | 'listings' | 'curated' | 'trends') => void;
   totalListingsCount: number;
+  totalLiveEbayCount?: number;
+  totalCuratedCount?: number;
   onOpenSpecsGuide: () => void;
   onOpenScheduler: () => void;
   metadata: ResearchMetadata;
@@ -24,6 +27,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
   totalListingsCount,
+  totalLiveEbayCount = 0,
+  totalCuratedCount = 0,
   onOpenSpecsGuide,
   onOpenScheduler,
   metadata,
@@ -140,7 +145,29 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Cpu className="w-3.5 h-3.5" />
             All Asking Prices & Vendors
-            <span className="bg-slate-800 text-slate-300 text-[10px] px-1.5 rounded-full font-mono">{totalListingsCount}</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono flex items-center gap-1 ${
+              activeTab === 'listings' ? 'bg-indigo-700/80 text-white' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+            }`}>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live eBay ({totalLiveEbayCount || totalListingsCount})
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('curated')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
+              activeTab === 'curated'
+                ? 'bg-indigo-600 text-white border border-indigo-400/40 shadow-xs'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5" />
+            Curated Benchmark Catalog
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
+              activeTab === 'curated' ? 'bg-indigo-700/80 text-white' : 'bg-slate-800 text-slate-300'
+            }`}>
+              {totalCuratedCount || 72}
+            </span>
           </button>
 
           <button

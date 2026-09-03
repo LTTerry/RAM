@@ -72,7 +72,110 @@ async function getEbayToken(appId: string, certId: string): Promise<string | nul
   }
 }
 
-// Search eBay Prices
+// Extract lot quantity and calculate true per-unit price to prevent multi-pack/tray distortion
+function extractLotQuantityAndUnitPrice(title: string, rawPrice: number, referenceUnitPrice?: number): { lotQuantity: number; unitPrice: number } {
+  if (!title || rawPrice <= 0) return { lotQuantity: 1, unitPrice: rawPrice };
+  
+  const t = title.toLowerCase();
+  let lotQty = 1;
+
+  // 1. "lot of X", "lot of: X", "lot of (X)"
+  const lotOfMatch = t.match(/\blot\s*(?:of)?\s*[:#]?\s*\(?(\d+)\)?\b/i);
+  if (lotOfMatch) {
+    const val = parseInt(lotOfMatch[1], 10);
+    if (val > 1 && val <= 500) lotQty = val;
+  }
+
+  // 2. "qty X", "qty: X", "quantity X"
+  if (lotQty === 1) {
+    const qtyMatch = t.match(/\b(?:qty|quantity)\s*[:#]?\s*\(?(\d+)\)?\b/i);
+    if (qtyMatch) {
+      const val = parseInt(qtyMatch[1], 10);
+      if (val > 1 && val <= 500) lotQty = val;
+    }
+  }
+
+  // 3. "X pack", "X-pack", "X pk", "pack of X"
+  if (lotQty === 1) {
+    const packMatch = t.match(/\b(?:pack\s*of\s*(\d+)|(\d+)\s*[- ]?(?:pack|pk))\b/i);
+    if (packMatch) {
+      const val = parseInt(packMatch[1] || packMatch[2], 10);
+      if (val > 1 && val <= 500) lotQty = val;
+    }
+  }
+
+  // 4. "matched pair", "pair of 2", "2 sticks"
+  if (lotQty === 1) {
+    if (/\b(?:matched\s+pair|pair\s+of\s+2|2\s*(?:x\s*)?sticks|kit\s*of\s*2)\b/i.test(t)) {
+      lotQty = 2;
+    } else if (/\b(?:kit\s*of\s*4|4\s*(?:x\s*)?sticks)\b/i.test(t)) {
+      lotQty = 4;
+    }
+  }
+
+  // 5. "4x", "8x", "16x", "32x", "64x" (ensure not rank like 1Rx4, 2Rx4, 2Rx8, 4Rx4, 8Rx4)
+  if (lotQty === 1) {
+    const xMatch = t.match(/(?<![0-9]r)\b(\d+)\s*x\b/i);
+    if (xMatch) {
+      const val = parseInt(xMatch[1], 10);
+      if (val > 1 && val <= 500) {
+        lotQty = val;
+      }
+    }
+  }
+
+  let unitPrice = rawPrice / lotQty;
+
+  // 6. If the unitPrice is still over 3x the reference price, check if title didn't specify quantity but price is a bulk tray
+  if (referenceUnitPrice && referenceUnitPrice > 0) {
+    if (unitPrice > referenceUnitPrice * 3.2) {
+      const impliedQty = Math.round(rawPrice / referenceUnitPrice);
+      if (impliedQty >= 2 && impliedQty <= 200) {
+        unitPrice = rawPrice / impliedQty;
+        lotQty = impliedQty;
+      }
+    }
+  }
+
+  return { lotQuantity: lotQty, unitPrice: Number(unitPrice.toFixed(2)) };
+}
+
+function buildSpeedStandard(gen: string, speed: number): string {
+  if (gen === 'DDR3') {
+    return speed === 1333 ? 'PC3-10600R' : speed === 1600 ? 'PC3-12800R' : 'PC3-14900R';
+  }
+  if (gen === 'DDR4') {
+    if (speed === 2133) return 'PC4-17000R';
+    if (speed === 2400) return 'PC4-19200R';
+    if (speed === 2666) return 'PC4-21300R';
+    if (speed === 2933) return 'PC4-23400R';
+    return 'PC4-25600R';
+  }
+  // DDR5
+  if (speed === 4800) return 'PC5-38400R';
+  if (speed === 5600) return 'PC5-44800R';
+  if (speed === 6400) return 'PC5-51200R';
+  return 'PC5-57600R';
+}
+
+function detectBrand(title: string): 'Samsung' | 'SK Hynix' | 'Micron' | 'Kingston' | 'Dell OEM' | 'HPE OEM' | 'Lenovo OEM' | 'Generic/Mixed' {
+  const t = title.toLowerCase();
+  if (t.includes('samsung')) return 'Samsung';
+  if (t.includes('hynix')) return 'SK Hynix';
+  if (t.includes('micron')) return 'Micron';
+  if (t.includes('kingston')) return 'Kingston';
+  if (t.includes('dell')) return 'Dell OEM';
+  if (t.includes('hpe') || t.includes('hp ')) return 'HPE OEM';
+  if (t.includes('lenovo')) return 'Lenovo OEM';
+  return 'Generic/Mixed';
+}
+
+function extractPartNumber(title: string): string {
+  const match = title.match(/\b(M393[A-Z0-9]+|M386[A-Z0-9]+|M392[A-Z0-9]+|HMA[A-Z0-9]+|HMT[A-Z0-9]+|MTA[A-Z0-9]+|MT36[A-Z0-9]+|KSM[A-Z0-9]+|KVR[A-Z0-9]+)\b/i);
+  return match ? match[1].toUpperCase() : '';
+}
+
+// Search eBay Prices with strict per-unit normalization
 async function searchEbayPrices(token: string, trend: any) {
   const q = encodeURIComponent(`${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM`);
   const filter = encodeURIComponent('conditionIds:{3000|2000|2500}');
@@ -104,20 +207,68 @@ async function searchEbayPrices(token: string, trend: any) {
   
   const data = await response.json();
   if (data.itemSummaries && data.itemSummaries.length > 0) {
-    let prices = data.itemSummaries
-      .map((item: any) => parseFloat(item.price?.value || '0'))
-      .filter((p: number) => p > 0);
+    const refPrice = trend.singleUnitRetailPrice || trend.currentAvgPrice || trend.avgPrice1MoAgo || 20;
+
+    const skuItems: any[] = [];
+    const unitPrices: number[] = [];
+
+    data.itemSummaries.forEach((item: any, idx: number) => {
+      const raw = parseFloat(item.price?.value || '0');
+      const title = item.title || '';
+      if (raw <= 0) return;
+      const normalized = extractLotQuantityAndUnitPrice(title, raw, refPrice);
+      if (normalized.unitPrice <= 0) return;
+
+      unitPrices.push(normalized.unitPrice);
+
+      const sellerName = item.seller?.username || 'eBay Seller';
+      const feedback = item.seller?.feedbackPercentage ? `${item.seller.feedbackPercentage}% positive` : '';
+      const cleanId = item.itemId ? String(item.itemId).replace(/[^a-zA-Z0-9]/g, '').slice(-12) : Math.random().toString(36).substring(2, 8);
+      const cond = item.condition || 'Used (Tested)';
+      const conditionMapped = cond.toLowerCase().includes('refurb') ? 'Refurbished' :
+        cond.toLowerCase().includes('open') ? 'Open Box' :
+        cond.toLowerCase().includes('new') ? 'New Surplus' : 'Used (Tested)';
+
+      skuItems.push({
+        id: `ebay-${trend.generation.toLowerCase()}-${trend.capacityGB}-${trend.speedMTs}-${cleanId}-${idx}`,
+        generation: trend.generation,
+        capacityGB: trend.capacityGB,
+        speedMTs: trend.speedMTs,
+        speedStandard: buildSpeedStandard(trend.generation, trend.speedMTs),
+        moduleType: (trend.capacityGB >= 128 && trend.generation === 'DDR4') ? 'LRDIMM' : (trend.generation === 'DDR5' && trend.capacityGB >= 128) ? '3DS RDIMM' : 'RDIMM',
+        rank: normalized.lotQuantity > 1 ? `Lot of ${normalized.lotQuantity}x` : '2Rx4',
+        voltage: trend.generation === 'DDR5' ? '1.1V' : trend.generation === 'DDR4' ? '1.2V' : '1.5V',
+        vendor: `eBay (${sellerName})`,
+        vendorType: 'Marketplace',
+        title: title,
+        partNumber: extractPartNumber(title),
+        brand: detectBrand(title),
+        pricePerUnit: normalized.unitPrice,
+        totalLotPrice: raw,
+        lotQuantity: normalized.lotQuantity,
+        currency: item.price?.currency || 'USD',
+        condition: conditionMapped,
+        testedWorking: true,
+        warranty: conditionMapped === 'Refurbished' ? '30-Day Seller Warranty' : 'eBay Money Back Guarantee',
+        sourceUrl: item.itemWebUrl || `https://www.ebay.com/itm/${item.itemId}`,
+        sourceDomain: 'ebay.com',
+        scrapedAt: new Date().toISOString(),
+        notes: feedback ? `eBay Seller: ${sellerName} (${feedback})` : `eBay Seller: ${sellerName}`,
+        stockStatus: 'In Stock'
+      });
+    });
       
-    if (prices.length > 0) {
-      prices.sort((a: number, b: number) => a - b);
-      const lowest = prices[0];
-      const highest = prices[prices.length - 1];
-      const avg = prices.reduce((a: number, b: number) => a + b, 0) / prices.length;
+    if (unitPrices.length > 0) {
+      unitPrices.sort((a: number, b: number) => a - b);
+      const lowest = unitPrices[0];
+      const highest = unitPrices[unitPrices.length - 1];
+      const avg = unitPrices.reduce((a: number, b: number) => a + b, 0) / unitPrices.length;
       
       return {
         lowestAskingCurrent: Number(lowest.toFixed(2)),
         highestAskingCurrent: Number(highest.toFixed(2)),
-        currentAvgPrice: Number(avg.toFixed(2))
+        currentAvgPrice: Number(avg.toFixed(2)),
+        items: skuItems
       };
     }
   }
@@ -239,6 +390,7 @@ async function updateMarketData() {
   let usedEbay = false;
   let skuSuccessCount = 0;
   let skuFailCount = 0;
+  let allLiveEbayListings: any[] = [];
 
   logSyncMessage(`=== SYNC STARTED: Querying secondary server memory market data (${serverTrends.length} SKUs) ===`);
 
@@ -264,8 +416,11 @@ async function updateMarketData() {
             trend.currentAvgPrice = prices.currentAvgPrice;
             trend.lowestAskingCurrent = prices.lowestAskingCurrent;
             trend.highestAskingCurrent = prices.highestAskingCurrent;
+            if (prices.items && prices.items.length > 0) {
+              allLiveEbayListings.push(...prices.items);
+            }
             skuSuccessCount++;
-            logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: SUCCESS - Avg: $${prices.currentAvgPrice.toFixed(2)} (Range: $${prices.lowestAskingCurrent.toFixed(2)} - $${prices.highestAskingCurrent.toFixed(2)})`);
+            logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: SUCCESS - Avg: $${prices.currentAvgPrice.toFixed(2)} (Range: $${prices.lowestAskingCurrent.toFixed(2)} - $${prices.highestAskingCurrent.toFixed(2)}) - Items: ${prices.items?.length || 0}`);
           } else {
             skuFailCount++;
             logSyncMessage(`[SKU ${i + 1}/${serverTrends.length}] ${skuLabel} - Status: FAILURE - No active listings found on eBay`);
@@ -319,8 +474,9 @@ Provide a concise 2-sentence summary of secondary market price clearing movement
       
       try {
         const skuPrompt = `
-Search the live web for the current average secondary market price (used/refurbished) for: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM server memory.
-Return ONLY a valid JSON object with the following keys, containing only numbers (no symbols or text). If you cannot find exact data, estimate based on similar modules.
+Search the live web for the current secondary market price PER SINGLE MODULE (unit price for 1x stick, used/refurbished, NOT lots or multi-packs) for: ${trend.capacityGB}GB ${trend.generation} ${trend.speedMTs} ECC RDIMM server memory.
+CRITICAL: All values must be normalized to ONE SINGLE RAM MODULE (per-unit price in USD). Do NOT return wholesale lot totals, tray totals, or multi-stick pack totals.
+Return ONLY a valid JSON object with the following keys, containing only numbers (no symbols or text):
 {
   "currentAvgPrice": 12.50,
   "lowestAskingCurrent": 9.50,
@@ -399,7 +555,9 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
   const payload = {
     success: true,
     metadata: serverMetadata,
-    listings: serverListings,
+    curatedListings: serverListings,
+    ebayListings: allLiveEbayListings,
+    listings: allLiveEbayListings.length > 0 ? allLiveEbayListings : serverListings,
     trends: serverTrends,
     ebaySold: serverEbaySold,
     cronInfo: {
@@ -411,6 +569,8 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
       storageType: 'Static JSON on GitHub Pages ($0 Hosting/DB Cost)',
       totalSkusAudited: serverTrends.length,
       ebayRecordsSuccess: skuSuccessCount,
+      totalLiveEbayListings: allLiveEbayListings.length,
+      totalCuratedListings: serverListings.length,
       jsonUpdated: true,
       dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',
       recentLogs: cronLogs,

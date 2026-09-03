@@ -21,18 +21,22 @@ import {
   Calendar
 } from 'lucide-react';
 import { RamListing, MemoryGeneration } from '../types';
-import { CURRENT_RESEARCH_METADATA } from '../data/researchMetadata';
+import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
 
 interface ListingsTableProps {
   listings: RamListing[];
   selectedGeneration: MemoryGeneration | 'ALL';
   onFilterGeneration: (gen: MemoryGeneration | 'ALL') => void;
+  metadata?: ResearchMetadata;
+  catalogType?: 'liveEbay' | 'curatedBenchmark';
 }
 
 export const ListingsTable: React.FC<ListingsTableProps> = ({
   listings,
   selectedGeneration,
   onFilterGeneration,
+  metadata = CURRENT_RESEARCH_METADATA,
+  catalogType = 'liveEbay',
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
@@ -236,6 +240,64 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Dynamic Catalog Type Banner */}
+      {catalogType === 'liveEbay' ? (
+        <div className="bg-slate-900/90 border border-emerald-500/30 rounded-xl p-4 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg shrink-0 mt-0.5">
+                <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse m-0.5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-bold text-white tracking-tight">
+                    All Asking Prices & Vendors — Live eBay Feed
+                  </h2>
+                  <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    Live Production API Feed
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                  Real-time active marketplace listings retrieved directly from the official eBay Browse API across all 36 server memory SKUs. Each item includes live seller information, unit pricing normalized from multi-stick lots/kits, and direct links to the live eBay listing.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400">Total Live Items:</span>
+              <span className="text-xs font-mono font-bold text-emerald-400">{listings.length}</span>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-slate-900/90 border border-indigo-500/30 rounded-xl p-4 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-indigo-500/10 border border-indigo-500/20 rounded-lg shrink-0 mt-0.5">
+                <Building2 className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-bold text-white tracking-tight">
+                    Curated Benchmark Catalog — ITAD Enterprise Baselines
+                  </h2>
+                  <span className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
+                    Enterprise Multi-Vendor Index
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+                  Standardized enterprise memory valuation benchmarks compiled from certified ITAD suppliers and primary secondary-market refurbishers (ServerSupply, CloudNinja, Memory.NET, IT Creations, and OEM channels) covering all 36 capacity and frequency specifications.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
+              <span className="text-[11px] text-slate-400">Curated Benchmarks:</span>
+              <span className="text-xs font-mono font-bold text-indigo-400">{listings.length}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ITAD Inventory Valuation Summary Banner */}
       {currentViewStats && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -334,7 +396,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
               <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Research: <strong className="text-white">{CURRENT_RESEARCH_METADATA.lastUpdatedDay}, {CURRENT_RESEARCH_METADATA.lastUpdatedDate}</strong> • <strong className="text-amber-300">{CURRENT_RESEARCH_METADATA.lastUpdatedTime}</strong></span>
+              <span>Research: <strong className="text-white">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate}</strong> • <strong className="text-amber-300">{metadata.lastUpdatedTime}</strong> <span className="text-slate-500">({metadata.timezone})</span></span>
             </div>
             <button
               onClick={exportCSV}
@@ -475,12 +537,13 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   </div>
                 </th>
                 <th className="py-3 px-3">Condition & Testing</th>
+                <th className="py-3 px-3 text-right">Listing Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredListings.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-500">
+                  <td colSpan={10} className="py-8 text-center text-slate-500">
                     No memory listings match your selected filter criteria.
                   </td>
                 </tr>
@@ -624,6 +687,24 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         <div className="text-[10px] text-slate-500">
                           {item.warranty || '30-Day Warranty'}
                         </div>
+                      </td>
+
+                      {/* Listing Action / Direct Link */}
+                      <td className="py-3 px-3 whitespace-nowrap text-right">
+                        {item.sourceUrl ? (
+                          <a
+                            href={item.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border border-slate-700 hover:border-indigo-400 shadow-xs group"
+                            title={item.sourceDomain === 'ebay.com' ? 'Open live eBay listing in a new tab' : 'Open distributor source page'}
+                          >
+                            <span>{item.sourceDomain === 'ebay.com' ? 'View on eBay' : 'View Source'}</span>
+                            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-white transition-colors" />
+                          </a>
+                        ) : (
+                          <span className="text-slate-600 text-xs">—</span>
+                        )}
                       </td>
                     </tr>
                   );

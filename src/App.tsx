@@ -8,13 +8,16 @@ import { SchedulerModal } from './components/SchedulerModal';
 
 import { INITIAL_RAM_LISTINGS } from './data/initialMemoryData';
 import { CURRENT_RESEARCH_METADATA, DEFAULT_CRON_INFO, ResearchMetadata } from './data/researchMetadata';
-import { RamListing, MemoryGeneration } from './types';
+import { MARKET_TRENDS_DATA } from './data/marketTrendsData';
+import { RamListing, MemoryGeneration, MarketTrend } from './types';
 import { Server, ArrowRight, Clock, Calendar, CheckCircle2, RefreshCw, Activity, Zap } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'matrix' | 'listings' | 'trends'>('matrix');
-  const [listings, setListings] = useState<RamListing[]>(INITIAL_RAM_LISTINGS);
+  const [activeTab, setActiveTab] = useState<'matrix' | 'listings' | 'curated' | 'trends'>('matrix');
+  const [liveEbayListings, setLiveEbayListings] = useState<RamListing[]>(INITIAL_RAM_LISTINGS);
+  const [curatedListings, setCuratedListings] = useState<RamListing[]>(INITIAL_RAM_LISTINGS);
   const [metadata, setMetadata] = useState<ResearchMetadata>(CURRENT_RESEARCH_METADATA);
+  const [trends, setTrends] = useState<MarketTrend[]>(MARKET_TRENDS_DATA);
   const [cronInfo, setCronInfo] = useState<any>(DEFAULT_CRON_INFO);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedGeneration, setSelectedGeneration] = useState<MemoryGeneration | 'ALL'>('ALL');
@@ -35,11 +38,23 @@ export default function App() {
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
-          if (Array.isArray(data.listings) && data.listings.length > 0) {
-            setListings(data.listings);
+          if (Array.isArray(data.ebayListings) && data.ebayListings.length > 0) {
+            setLiveEbayListings(data.ebayListings);
+          } else if (Array.isArray(data.listings) && data.listings.length > 0) {
+            setLiveEbayListings(data.listings);
           }
+
+          if (Array.isArray(data.curatedListings) && data.curatedListings.length > 0) {
+            setCuratedListings(data.curatedListings);
+          } else {
+            setCuratedListings(INITIAL_RAM_LISTINGS);
+          }
+
           if (data.metadata) {
             setMetadata(data.metadata);
+          }
+          if (Array.isArray(data.trends) && data.trends.length > 0) {
+            setTrends(data.trends);
           }
           if (data.cronInfo) {
             setCronInfo(data.cronInfo);
@@ -82,7 +97,9 @@ export default function App() {
       <Navbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        totalListingsCount={listings.length}
+        totalListingsCount={liveEbayListings.length}
+        totalLiveEbayCount={liveEbayListings.length}
+        totalCuratedCount={curatedListings.length}
         onOpenSpecsGuide={() => setIsSpecsGuideOpen(true)}
         onOpenScheduler={() => setIsSchedulerOpen(true)}
         metadata={metadata}
@@ -125,20 +142,28 @@ export default function App() {
                       Research Updated: <strong className="text-white">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate}</strong> at <strong className="text-amber-300">{metadata.lastUpdatedTime}</strong> <span className="text-slate-500">({metadata.timezone})</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setActiveTab('listings')}
-                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
                     >
-                      Browse Catalog ({listings.length})
-                      <ArrowRight className="w-3.5 h-3.5" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                      Live eBay ({liveEbayListings.length})
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('curated')}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                    >
+                      Curated Benchmarks ({curatedListings.length})
+                      <ArrowRight className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => setIsSchedulerOpen(true)}
-                      className="bg-emerald-600/90 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 border border-slate-700"
                     >
-                      <Activity className="w-3.5 h-3.5" />
-                      Daily 8:00 AM (UTC+8) Cron Engine
+                      <Activity className="w-3.5 h-3.5 text-emerald-400" />
+                      Cron Status
                     </button>
                   </div>
                 </div>
@@ -154,18 +179,22 @@ export default function App() {
                     </span>
                   </div>
                   <div className="text-2xl font-mono font-bold">
-                    {listings.length} SKUs Audited
+                    36 SKUs Audited
+                  </div>
+                  <div className="text-xs text-indigo-100 mt-0.5">
+                    {liveEbayListings.length} Live Items • {curatedListings.length} Benchmark SKUs
                   </div>
                 </div>
                 <div className="mt-3 pt-2 border-t border-indigo-400/40 flex justify-between items-center text-[11px] opacity-90 font-mono">
-                  <span>eBay • CPU Medics • ServerSupply</span>
+                  <span>eBay Browse API (Prod) • ServerSupply</span>
                   <span className="font-bold">{metadata.researchQuarter}</span>
                 </div>
               </div>
             </div>
 
             <MarketMatrix
-              listings={listings}
+              listings={curatedListings}
+              trends={trends}
               onSelectSpec={handleSelectMatrixSpec}
             />
           </div>
@@ -173,14 +202,29 @@ export default function App() {
 
         {activeTab === 'listings' && (
           <ListingsTable
-            listings={listings}
+            listings={liveEbayListings}
             selectedGeneration={selectedGeneration}
             onFilterGeneration={setSelectedGeneration}
+            metadata={metadata}
+            catalogType="liveEbay"
+          />
+        )}
+
+        {activeTab === 'curated' && (
+          <ListingsTable
+            listings={curatedListings}
+            selectedGeneration={selectedGeneration}
+            onFilterGeneration={setSelectedGeneration}
+            metadata={metadata}
+            catalogType="curatedBenchmark"
           />
         )}
 
         {activeTab === 'trends' && (
-          <MarketTrends />
+          <MarketTrends
+            metadata={metadata}
+            trends={trends}
+          />
         )}
       </main>
 

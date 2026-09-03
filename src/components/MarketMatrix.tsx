@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   Layers, 
-  Tag, 
   TrendingUp, 
   ExternalLink, 
   Building2, 
@@ -15,18 +14,18 @@ import {
   ShieldCheck,
   Server
 } from 'lucide-react';
-import { RamListing, MemoryGeneration } from '../types';
+import { RamListing, MemoryGeneration, MarketTrend } from '../types';
 import { MARKET_TRENDS_DATA } from '../data/marketTrendsData';
-import { getEbayHighestSoldRecord, EBAY_CATEGORY_HIGHEST_SOLD_OVERVIEW } from '../data/ebaySoldData';
 
 interface MarketMatrixProps {
   listings: RamListing[];
+  trends?: MarketTrend[];
   onSelectSpec: (gen: MemoryGeneration, cap: number, speed: number) => void;
 }
 
-export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSpec }) => {
+export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, onSelectSpec }) => {
   const [activeGenTab, setActiveGenTab] = useState<'DDR3' | 'DDR4' | 'DDR5_MONO' | 'DDR5_3DS'>('DDR4');
-  const [displayMode, setDisplayMode] = useState<'range' | 'lowest' | 'highest' | 'retailBuyItNow' | 'ebaySold'>('retailBuyItNow');
+  const [displayMode, setDisplayMode] = useState<'retailBuyItNow' | 'range' | 'lowest' | 'highest'>('retailBuyItNow');
   const [showPricingGuide, setShowPricingGuide] = useState(true);
 
   // Configuration for matrix axes per generation
@@ -79,13 +78,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
     activeGenTab === 'DDR4' ? DDR4_CONFIG : 
     activeGenTab === 'DDR5_MONO' ? DDR5_MONO_CONFIG : DDR5_3DS_CONFIG;
 
-  const actualGen = activeGenTab.startsWith('DDR5') ? 'DDR5' : activeGenTab;
-
-  const currentCategoryEbaySummary = EBAY_CATEGORY_HIGHEST_SOLD_OVERVIEW.find(
-    c => c.generation === actualGen
-  );
-
-  // Helper to compute exact min, max, avg, retail, and sold stats for a cell from eBay data
+  // Helper to compute exact min, max, avg, and retail stats for a cell from eBay data
   const getCellStats = (tabGen: string, cap: number, speed: number) => {
     const gen = tabGen.startsWith('DDR5') ? 'DDR5' as MemoryGeneration : tabGen as MemoryGeneration;
     const is3dsTab = tabGen === 'DDR5_3DS';
@@ -99,17 +92,8 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
       return true;
     });
 
-    const is3DSEbaySold = (soldRec: any) => {
-      if (!soldRec) return true;
-      if (is3dsTab && soldRec.moduleType !== '3DS RDIMM') return false;
-      if (isMonoTab && soldRec.moduleType === '3DS RDIMM') return false;
-      return true;
-    };
-
-    const ebaySold = getEbayHighestSoldRecord(gen, cap, speed);
-    const validEbaySold = is3DSEbaySold(ebaySold) ? ebaySold : null;
-
-    const trendRecord = MARKET_TRENDS_DATA.find(t => {
+    const trendsSource = trends && trends.length > 0 ? trends : MARKET_TRENDS_DATA;
+    const trendRecord = trendsSource.find(t => {
       if (t.generation !== gen || t.capacityGB !== cap || t.speedMTs !== speed) return false;
       // Heuristic: If it explicitly mentions 3DS in notes, it's 3DS.
       const is3dsTrend = t.analysisNotes.toLowerCase().includes('3ds');
@@ -124,7 +108,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
 
     const activeListings = ebayActiveListings.length > 0 ? ebayActiveListings : matched;
 
-    if (activeListings.length === 0 && !validEbaySold && !trendRecord) {
+    if (activeListings.length === 0 && !trendRecord) {
       return null;
     }
 
@@ -137,16 +121,19 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
       ? activeListings.reduce((prev, curr) => curr.pricePerUnit > prev.pricePerUnit ? curr : prev, activeListings[0])
       : null;
 
-    // Exact prices directly from eBay listings (no estimation fallbacks)
-    const minPrice = lowestListing ? lowestListing.pricePerUnit : (trendRecord?.lowestAskingCurrent || 0);
-    const maxPrice = highestListing ? highestListing.pricePerUnit : (trendRecord?.highestAskingCurrent || 0);
+    // Synchronized with live Market Trends data from eBay API
+    const minPrice = trendRecord?.lowestAskingCurrent 
+      ?? (lowestListing ? lowestListing.pricePerUnit : 0);
+    const maxPrice = trendRecord?.highestAskingCurrent 
+      ?? (highestListing ? highestListing.pricePerUnit : 0);
     
-    const avgPrice = activeListings.length > 0
-      ? activeListings.reduce((a, b) => a + b.pricePerUnit, 0) / activeListings.length
-      : (trendRecord?.currentAvgPrice || (minPrice + maxPrice) / 2);
+    const avgPrice = trendRecord?.currentAvgPrice 
+      ?? (activeListings.length > 0 
+          ? activeListings.reduce((a, b) => a + b.pricePerUnit, 0) / activeListings.length 
+          : (minPrice + maxPrice) / 2);
 
-    const singleUnitRetail = highestListing ? highestListing.pricePerUnit : (trendRecord?.singleUnitRetailPrice || maxPrice);
-    const wholesaleTrayFloor = lowestListing ? lowestListing.pricePerUnit : (trendRecord?.lowestAskingCurrent || minPrice);
+    const singleUnitRetail = trendRecord?.singleUnitRetailPrice ?? maxPrice;
+    const wholesaleTrayFloor = trendRecord?.lowestAskingCurrent ?? minPrice;
 
     const spread = maxPrice - minPrice;
     const spreadPercent = minPrice > 0 ? (spread / minPrice) * 100 : 0;
@@ -176,7 +163,6 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
       highestListing,
       vendors,
       primaryListing: lowestListing || matched[0] || null,
-      ebaySold: validEbaySold,
       trendRecord
     };
   };
@@ -310,17 +296,6 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
                 📊 Exact eBay Range (Low to High)
               </button>
               <button
-                onClick={() => setDisplayMode('ebaySold')}
-                className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
-                  displayMode === 'ebaySold'
-                    ? 'bg-amber-600 text-white shadow-xs'
-                    : 'text-amber-400 hover:text-white hover:bg-slate-900'
-                }`}
-              >
-                <Tag className="w-3 h-3" />
-                🏷️ Exact eBay Sold High ($)
-              </button>
-              <button
                 onClick={() => setDisplayMode('lowest')}
                 className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
                   displayMode === 'lowest'
@@ -347,38 +322,9 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
 
           <div className="text-[11px] text-slate-400 flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>All values from <strong>Exact eBay Active & Sold Listings</strong></span>
+            <span>All values from <strong>Exact eBay Active Listings</strong> (Lowest, Highest, Spread & Buy-It-Now)</span>
           </div>
         </div>
-
-        {/* Category-Level eBay Sold Benchmark Summary */}
-        {currentCategoryEbaySummary && (
-          <div className="mt-3.5 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5">
-              <span className="p-1.5 rounded-md bg-amber-500/20 text-amber-300 font-bold">
-                <Tag className="w-4 h-4" />
-              </span>
-              <div>
-                <div className="font-bold text-amber-200 flex items-center gap-2">
-                  <span>eBay Category Highlights: {currentCategoryEbaySummary.headline}</span>
-                  <span className="text-[10px] bg-amber-500/20 border border-amber-500/30 text-amber-300 px-1.5 py-0.2 rounded font-mono">
-                    Realized Range: {currentCategoryEbaySummary.pricingRangeGB}
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-300 mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1">
-                  <span>Top Single Sold: <strong className="text-white">{currentCategoryEbaySummary.topSingleSold.spec}</strong> @ <strong className="text-amber-300 font-mono">${currentCategoryEbaySummary.topSingleSold.price.toFixed(2)}</strong> ({currentCategoryEbaySummary.topSingleSold.soldDate})</span>
-                  <span>Top Volume Workhorse: <strong className="text-white">{currentCategoryEbaySummary.topVolumeSold.spec}</strong> @ <strong className="text-amber-300 font-mono">${currentCategoryEbaySummary.topVolumeSold.price.toFixed(2)}</strong></span>
-                </div>
-              </div>
-            </div>
-            <div className="shrink-0 text-right">
-              <div className="text-[10px] text-slate-400">Largest Grossing Sold Lot</div>
-              <div className="text-xs font-mono font-bold text-emerald-400">
-                ${currentCategoryEbaySummary.topLotSold.totalPrice.toFixed(2)} (${currentCategoryEbaySummary.topLotSold.perUnitPrice.toFixed(2)}/unit)
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* The Interactive Bento Grid Table */}
@@ -393,7 +339,6 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
               Active: {
                 displayMode === 'retailBuyItNow' ? '🛒 Exact 1x Buy-It-Now' :
                 displayMode === 'range' ? '📊 Exact Lowest to Highest eBay Listing' :
-                displayMode === 'ebaySold' ? '🏷️ Exact eBay Highest Sold' :
                 displayMode === 'lowest' ? '🟢 Exact Lowest eBay Listing' :
                 '🟣 Exact Highest eBay Listing'
               }
@@ -514,34 +459,6 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
                             </div>
                           )}
 
-                          {/* eBay Sold High Mode */}
-                          {displayMode === 'ebaySold' && (
-                            <div className="space-y-1">
-                              <div className="text-[9px] uppercase font-bold text-amber-400 tracking-wider flex items-center justify-between">
-                                <span className="flex items-center gap-1">
-                                  <Tag className="w-2.5 h-2.5" />
-                                  Exact eBay Sold High
-                                </span>
-                                {stats.ebaySold && (
-                                  <span className="text-amber-300 font-mono">
-                                    ${(stats.ebaySold.highestSoldPricePerUnit / cap).toFixed(2)}/GB
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-lg font-bold text-amber-300 font-mono">
-                                {stats.ebaySold ? `$${stats.ebaySold.highestSoldPricePerUnit.toFixed(2)}` : 'N/A'}
-                              </div>
-                              {stats.ebaySold ? (
-                                <div className="text-[10px] text-slate-300 font-sans">
-                                  <div className="text-slate-400">Sold: <strong className="text-white">{stats.ebaySold.soldDate}</strong></div>
-                                  <div className="text-slate-400 truncate mt-0.5">Lot: {stats.ebaySold.lotQuantity}x (${stats.ebaySold.totalTransactionPrice.toFixed(2)})</div>
-                                </div>
-                              ) : (
-                                <div className="text-[10px] text-slate-500">No sold record archived</div>
-                              )}
-                            </div>
-                          )}
-
                           {/* Lowest eBay Listing Mode */}
                           {displayMode === 'lowest' && (
                             <div className="space-y-1">
@@ -571,17 +488,6 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
                               <div className="text-[10px] text-slate-400 truncate" title={stats.highestListing?.title || 'eBay Active Listing'}>
                                 {stats.highestListing ? `${stats.highestListing.vendor} (${stats.highestListing.condition})` : 'eBay Active Listing'}
                               </div>
-                            </div>
-                          )}
-
-                          {/* eBay Highest Sold Pill (Visible in retail and range mode) */}
-                          {displayMode !== 'ebaySold' && stats.ebaySold && (
-                            <div className="mt-2 py-1 px-2 rounded bg-amber-500/10 border border-amber-500/20 text-[10px] flex items-center justify-between text-amber-300 font-mono">
-                              <span className="text-slate-400 flex items-center gap-1 font-sans">
-                                <Tag className="w-2.5 h-2.5 text-amber-400" />
-                                Sold High:
-                              </span>
-                              <strong>${stats.ebaySold.highestSoldPricePerUnit.toFixed(2)}</strong>
                             </div>
                           )}
 
@@ -643,10 +549,6 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, onSelectSp
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
               <strong className="text-slate-200">Highest eBay Listing:</strong> Exact highest active listing price on eBay
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-              <strong className="text-slate-200">eBay Sold High:</strong> Verified completed transaction on eBay
             </span>
           </div>
 

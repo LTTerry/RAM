@@ -17,16 +17,24 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import { MARKET_TRENDS_DATA, THREE_MONTH_MARKET_SUMMARY } from '../data/marketTrendsData';
-import { CURRENT_RESEARCH_METADATA } from '../data/researchMetadata';
-import { MemoryGeneration } from '../types';
+import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
+import { MemoryGeneration, MarketTrend } from '../types';
 
-export const MarketTrends: React.FC = () => {
+interface MarketTrendsProps {
+  metadata?: ResearchMetadata;
+  trends?: MarketTrend[];
+}
+
+export const MarketTrends: React.FC<MarketTrendsProps> = ({
+  metadata = CURRENT_RESEARCH_METADATA,
+  trends = MARKET_TRENDS_DATA,
+}) => {
   const [selectedGen, setSelectedGen] = useState<'ALL' | 'DDR3' | 'DDR4' | 'DDR5' | 'DDR5_MONO' | 'DDR5_3DS'>('ALL');
 
   const isDDR5_3DS = (t: any) => t.generation === 'DDR5' && (t.capacityGB === 256 || (t.capacityGB === 128 && t.analysisNotes.toLowerCase().includes('3ds')));
   const isDDR5_MONO = (t: any) => t.generation === 'DDR5' && !isDDR5_3DS(t);
 
-  const filteredTrends = MARKET_TRENDS_DATA.filter(t => {
+  const filteredTrends = trends.filter(t => {
     if (selectedGen === 'ALL') return true;
     if (selectedGen === 'DDR5_MONO') return isDDR5_MONO(t);
     if (selectedGen === 'DDR5_3DS') return isDDR5_3DS(t);
@@ -47,7 +55,7 @@ export const MarketTrends: React.FC = () => {
               </span>
               <span className="bg-slate-950 text-slate-300 border border-slate-800 px-3 py-0.5 rounded-full text-xs flex items-center gap-1.5 font-mono">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                Research Update: <strong className="text-white font-semibold">{CURRENT_RESEARCH_METADATA.lastUpdatedDay}, {CURRENT_RESEARCH_METADATA.lastUpdatedDate}</strong> at <strong className="text-amber-300 font-semibold">{CURRENT_RESEARCH_METADATA.lastUpdatedTime}</strong> <span className="text-slate-500">({CURRENT_RESEARCH_METADATA.timezone})</span>
+                Research Update: <strong className="text-white font-semibold">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate}</strong> at <strong className="text-amber-300 font-semibold">{metadata.lastUpdatedTime}</strong> <span className="text-slate-500">({metadata.timezone})</span>
               </span>
             </div>
             <div>
@@ -62,10 +70,10 @@ export const MarketTrends: React.FC = () => {
 
           <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs font-mono shrink-0">
             <div className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Research Edition</div>
-            <div className="text-white font-bold text-sm mt-0.5">{CURRENT_RESEARCH_METADATA.researchQuarter} Benchmark</div>
+            <div className="text-white font-bold text-sm mt-0.5">{metadata.researchQuarter} Benchmark</div>
             <div className="text-slate-400 text-[11px] mt-1 flex items-center gap-1">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{CURRENT_RESEARCH_METADATA.totalSkusAudited} Verified Enterprise SKUs</span>
+              <span>{metadata.totalSkusAudited} Verified Enterprise SKUs</span>
             </div>
           </div>
         </div>
@@ -153,13 +161,13 @@ export const MarketTrends: React.FC = () => {
         <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>Exact eBay Active Listings & Verified Sold Highs</span>
+              <span>Exact eBay Active Listings & Market Spread</span>
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-mono font-normal">
                 Zero Estimates
               </span>
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Exact lowest active listing price (bulk lot unit price or system pull), exact highest active listing price (single Buy-It-Now / OEM certified), and verified eBay sold high records.
+              Exact lowest active listing price (bulk lot unit price or system pull), exact highest active listing price (single Buy-It-Now / OEM certified), and active market spreads.
             </p>
           </div>
         </div>
@@ -172,7 +180,6 @@ export const MarketTrends: React.FC = () => {
                 <th className="py-3 px-3.5">Capacity</th>
                 <th className="py-3 px-3.5">Speed</th>
                 <th className="py-3 px-3.5 text-right text-indigo-300">🛒 Exact 1x Buy-It-Now ($)</th>
-                <th className="py-3 px-3.5 text-right text-amber-300">🏷️ Exact eBay Sold High ($)</th>
                 <th className="py-3 px-3.5 text-right text-emerald-400">🟢 Exact Lowest Listing ($)</th>
                 <th className="py-3 px-3.5 text-right text-purple-300">🟣 Exact Highest Listing ($)</th>
                 <th className="py-3 px-3.5 text-right text-sky-300">⚖️ Exact eBay Avg ($)</th>
@@ -218,20 +225,6 @@ export const MarketTrends: React.FC = () => {
                     {/* Single-Stick Retail Buy It Now */}
                     <td className="py-3 px-3.5 text-right font-mono font-bold text-indigo-300 whitespace-nowrap bg-indigo-500/5">
                       ${retailPrice.toFixed(2)}
-                    </td>
-
-                    {/* eBay Sold High */}
-                    <td className="py-3 px-3.5 text-right font-mono font-bold text-amber-300 whitespace-nowrap">
-                      {trend.ebayHighestSoldPrice ? (
-                        <div>
-                          <div>${trend.ebayHighestSoldPrice.toFixed(2)}</div>
-                          <div className="text-[9px] text-slate-400 font-sans font-normal">
-                            {trend.ebayHighestSoldDate}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-slate-500">-</span>
-                      )}
                     </td>
 
                     {/* Lowest (Floor) */}
