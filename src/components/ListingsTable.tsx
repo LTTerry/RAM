@@ -496,10 +496,10 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800 text-[10px]">
-                <th className="py-3 px-3">Gen</th>
+                <th className="py-3 px-3 whitespace-nowrap">Gen</th>
                 <th 
                   onClick={() => handleSort('capacityGB')}
-                  className="py-3 px-3 cursor-pointer hover:text-white"
+                  className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
                     Capacity
@@ -508,19 +508,19 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                 </th>
                 <th 
                   onClick={() => handleSort('speedMTs')}
-                  className="py-3 px-3 cursor-pointer hover:text-white"
+                  className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
                     Speed / Standard
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
-                <th className="py-3 px-3">Part Number / Model</th>
-                <th className="py-3 px-3">Vendor / Channel</th>
-                <th className="py-3 px-3">Lot Qty</th>
+                <th className="py-3 px-3 whitespace-nowrap">Part Number / Model</th>
+                <th className="py-3 px-3 whitespace-nowrap">Vendor / Channel</th>
+                <th className="py-3 px-3 whitespace-nowrap">Lot Qty</th>
                 <th 
                   onClick={() => handleSort('pricePerUnit')}
-                  className="py-3 px-3 cursor-pointer hover:text-white"
+                  className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
                     Unit Price ($) / Position
@@ -529,15 +529,15 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                 </th>
                 <th 
                   onClick={() => handleSort('pricePerGB')}
-                  className="py-3 px-3 cursor-pointer hover:text-white"
+                  className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
                     $/GB Rate
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
-                <th className="py-3 px-3">Condition & Testing</th>
-                <th className="py-3 px-3 text-right">Listing Action</th>
+                <th className="py-3 px-3 whitespace-nowrap">Condition & Testing</th>
+                <th className="py-3 px-3 text-right whitespace-nowrap">Listing Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
