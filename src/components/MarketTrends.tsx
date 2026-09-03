@@ -14,8 +14,11 @@ import {
   DollarSign,
   Clock,
   ArrowUpRight,
-  CheckCircle2
+  CheckCircle2,
+  Calculator,
+  HelpCircle
 } from 'lucide-react';
+import { CalculationFormulasModal } from './CalculationFormulasModal';
 import { MARKET_TRENDS_DATA, THREE_MONTH_MARKET_SUMMARY } from '../data/marketTrendsData';
 import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
 import { MemoryGeneration, MarketTrend } from '../types';
@@ -30,6 +33,7 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
   trends = MARKET_TRENDS_DATA,
 }) => {
   const [selectedGen, setSelectedGen] = useState<'ALL' | 'DDR3' | 'DDR4' | 'DDR5' | 'DDR5_MONO' | 'DDR5_3DS'>('ALL');
+  const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
 
   const isDDR5_3DS = (t: any) => t.generation === 'DDR5' && (t.capacityGB === 256 || (t.capacityGB === 128 && t.analysisNotes.toLowerCase().includes('3ds')));
   const isDDR5_MONO = (t: any) => t.generation === 'DDR5' && !isDDR5_3DS(t);
@@ -158,9 +162,9 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
 
       {/* Trajectory Breakdown Table */}
       <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-4 border-b border-slate-800 bg-slate-950 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-800 bg-slate-950 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <h3 className="text-sm font-bold text-white flex items-center gap-2 flex-wrap">
               <span>Exact eBay Active Listings & Market Spread</span>
               <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded font-mono font-normal">
                 Zero Estimates
@@ -170,6 +174,15 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
               Exact lowest active listing price (bulk lot unit price or system pull), exact highest active listing price (single Buy-It-Now / OEM certified), and active market spreads.
             </p>
           </div>
+
+          <button
+            onClick={() => setIsFormulaModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shadow-sm shrink-0 border border-indigo-500/40 hover:scale-[1.02] active:scale-[0.98]"
+            title="View calculation formulas for Exact eBay Avg, Spread, 90-Day Change, and Retail $/GB"
+          >
+            <Calculator className="w-3.5 h-3.5" />
+            <span>Calculation Formulas</span>
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -182,11 +195,47 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
                 <th className="py-3 px-3.5 text-right text-indigo-300">🛒 Exact 1x Buy-It-Now ($)</th>
                 <th className="py-3 px-3.5 text-right text-emerald-400">🟢 Exact Lowest Listing ($)</th>
                 <th className="py-3 px-3.5 text-right text-purple-300">🟣 Exact Highest Listing ($)</th>
-                <th className="py-3 px-3.5 text-right text-sky-300">⚖️ Exact eBay Avg ($)</th>
-                <th className="py-3 px-3.5 text-right text-amber-300">Spread ($)</th>
+                <th className="py-3 px-3.5 text-right text-sky-300">
+                  <button
+                    onClick={() => setIsFormulaModalOpen(true)}
+                    className="inline-flex items-center gap-1 hover:text-white transition-colors cursor-pointer group"
+                    title="Click to view Exact eBay Avg formula"
+                  >
+                    <span>⚖️ Exact eBay Avg ($)</span>
+                    <HelpCircle className="w-3 h-3 text-sky-400 opacity-70 group-hover:opacity-100" />
+                  </button>
+                </th>
+                <th className="py-3 px-3.5 text-right text-amber-300">
+                  <button
+                    onClick={() => setIsFormulaModalOpen(true)}
+                    className="inline-flex items-center gap-1 hover:text-white transition-colors cursor-pointer group"
+                    title="Click to view Market Spread formula"
+                  >
+                    <span>Spread ($)</span>
+                    <HelpCircle className="w-3 h-3 text-amber-400 opacity-70 group-hover:opacity-100" />
+                  </button>
+                </th>
                 <th className="py-3 px-3.5 text-right">3 Mo Ago</th>
-                <th className="py-3 px-3.5 text-center">90-Day Change</th>
-                <th className="py-3 px-3.5 text-right">Retail $/GB</th>
+                <th className="py-3 px-3.5 text-center">
+                  <button
+                    onClick={() => setIsFormulaModalOpen(true)}
+                    className="inline-flex items-center gap-1 hover:text-white transition-colors cursor-pointer group"
+                    title="Click to view 90-Day Change formula"
+                  >
+                    <span>90-Day Change</span>
+                    <HelpCircle className="w-3 h-3 text-rose-400 opacity-70 group-hover:opacity-100" />
+                  </button>
+                </th>
+                <th className="py-3 px-3.5 text-right">
+                  <button
+                    onClick={() => setIsFormulaModalOpen(true)}
+                    className="inline-flex items-center gap-1 hover:text-white transition-colors cursor-pointer group"
+                    title="Click to view Retail $/GB formula"
+                  >
+                    <span>Retail $/GB</span>
+                    <HelpCircle className="w-3 h-3 text-indigo-400 opacity-70 group-hover:opacity-100" />
+                  </button>
+                </th>
                 <th className="py-3 px-3.5">Activity & Analysis Notes</th>
               </tr>
             </thead>
@@ -285,6 +334,11 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
           </table>
         </div>
       </div>
+
+      <CalculationFormulasModal
+        isOpen={isFormulaModalOpen}
+        onClose={() => setIsFormulaModalOpen(false)}
+      />
     </div>
   );
 };

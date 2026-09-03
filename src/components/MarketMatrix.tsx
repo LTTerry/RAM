@@ -185,7 +185,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 Exact eBay Lowest & Highest Listing Prices
               </span>
             </div>
-            <h2 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-white mt-1 flex items-center gap-2 flex-wrap">
               <span>Enterprise Memory Market Matrix</span>
               <span className="text-xs font-normal text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
                 Exact eBay Listing Verified
