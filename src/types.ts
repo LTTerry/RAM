@@ -10,7 +10,7 @@ export interface RamListing {
   rank: string; // e.g. 1Rx4, 2Rx4, 2Rx8, 4Rx4, 8Rx4
   voltage?: string; // e.g. 1.1V, 1.2V, 1.35V, 1.5V
   vendor: string; // eBay, ServerSupply, CPU Medics, TechyParts, IT Creations, CloudNinjas, HardDriveDirect, Wholesale B2B
-  vendorType: 'Marketplace' | 'IT Refurbisher' | 'Wholesale B2B' | 'Enterprise Spare';
+  vendorType: string;
   title: string;
   partNumber?: string;
   brand: 'Samsung' | 'SK Hynix' | 'Micron' | 'Kingston' | 'Dell OEM' | 'HPE OEM' | 'Lenovo OEM' | 'Generic/Mixed';
@@ -58,6 +58,7 @@ export interface MarketTrend {
   avgPrice3MoAgo: number;
   avgPrice2MoAgo: number;
   avgPrice1MoAgo: number;
+  avgPrice1WeekAgo: number;
   currentAvgPrice: number;
   lowestAskingCurrent: number;
   highestAskingCurrent: number;
@@ -67,6 +68,7 @@ export interface MarketTrend {
   ebayHighestSoldDate?: string;
   ebayHighestSoldLotInfo?: string;
   threeMonthChangePercent: number;
+  oneWeekChangePercent: number;
   trendDirection: 'up' | 'down' | 'stable';
   pricePerGB: number;
   marketActivityLevel: 'High' | 'Very High' | 'Moderate' | 'Low/Decommissioning';

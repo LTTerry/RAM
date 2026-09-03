@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { GoogleGenAI } from '@google/genai';
 
 // Relative imports for data
-import { INITIAL_RAM_LISTINGS } from '../src/data/initialMemoryData.js';
+import { INITIAL_CURATED_LISTINGS } from '../src/data/initialMemoryData.js';
 import { MARKET_TRENDS_DATA } from '../src/data/marketTrendsData.js';
 import { EBAY_SOLD_RECORDS } from '../src/data/ebaySoldData.js';
 import { CURRENT_RESEARCH_METADATA } from '../src/data/researchMetadata.js';
@@ -325,7 +325,7 @@ function getFormattedTimeMetadata() {
 async function updateMarketData() {
   console.log('[GitHub Actions] Starting daily market data update...');
   
-  let serverListings = [...INITIAL_RAM_LISTINGS];
+  let serverListings = [...INITIAL_CURATED_LISTINGS];
   let serverTrends = [...MARKET_TRENDS_DATA];
   let serverEbaySold = [...EBAY_SOLD_RECORDS];
   let serverMetadata = { ...CURRENT_RESEARCH_METADATA };
@@ -337,7 +337,7 @@ async function updateMarketData() {
       const raw = fs.readFileSync(DATA_FILE, 'utf-8');
       const parsed = JSON.parse(raw);
       if (parsed.listings && parsed.trends) {
-        serverListings = parsed.listings;
+        serverListings = [...INITIAL_CURATED_LISTINGS];
         serverTrends = parsed.trends;
         serverEbaySold = parsed.ebaySold || serverEbaySold;
         serverMetadata = parsed.metadata || serverMetadata;
@@ -522,10 +522,12 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
   // Recalculate maths
   serverTrends = serverTrends.map((trend) => {
     const changePct = ((trend.currentAvgPrice - trend.avgPrice3MoAgo) / trend.avgPrice3MoAgo) * 100;
+    const weekChangePct = ((trend.currentAvgPrice - trend.avgPrice1WeekAgo) / trend.avgPrice1WeekAgo) * 100;
     const pricePerGb = Math.round((trend.currentAvgPrice / trend.capacityGB) * 100) / 100;
     return {
       ...trend,
       threeMonthChangePercent: Math.round(changePct * 10) / 10,
+      oneWeekChangePercent: Math.round(weekChangePct * 10) / 10,
       trendDirection: changePct > 0.5 ? 'up' : changePct < -0.5 ? 'down' : 'stable',
       pricePerGB: pricePerGb,
     };

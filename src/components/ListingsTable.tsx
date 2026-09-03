@@ -20,7 +20,7 @@ import {
   Clock,
   Calendar
 } from 'lucide-react';
-import { RamListing, MemoryGeneration } from '../types';
+import { RamListing, MemoryGeneration, MarketTrend } from '../types';
 import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
 
 interface ListingsTableProps {
@@ -29,7 +29,74 @@ interface ListingsTableProps {
   onFilterGeneration: (gen: MemoryGeneration | 'ALL') => void;
   metadata?: ResearchMetadata;
   catalogType?: 'liveEbay' | 'curatedBenchmark';
+  trends?: MarketTrend[];
 }
+
+const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
+  const points = [
+    trend.avgPrice3MoAgo,
+    trend.avgPrice2MoAgo,
+    trend.avgPrice1MoAgo,
+    trend.currentAvgPrice
+  ];
+  
+  const min = Math.min(...points);
+  const max = Math.max(...points);
+  const range = max - min || 1; // avoid division by zero
+  const width = 48;
+  const height = 16;
+  
+  // Normalize points to SVG coordinates
+  const coords = points.map((p, i) => {
+    const x = (i / (points.length - 1)) * width;
+    const y = height - ((p - min) / range) * height;
+    return `${x},${y}`;
+  });
+  
+  const pathData = `M ${coords.join(' L ')}`;
+  const isUp = trend.threeMonthChangePercent > 0;
+  const isDown = trend.threeMonthChangePercent < 0;
+  
+  // In ITAD, if price is going up it's typically green (value increase). 
+  // If price drops it's red (depreciation).
+  const colorClass = isUp ? 'text-emerald-400' : isDown ? 'text-rose-400' : 'text-slate-400';
+  
+  return (
+    <div className="flex flex-col gap-1 items-end w-[60px]">
+      <div className={`text-[10px] font-bold font-mono flex items-center gap-0.5 ${colorClass}`}>
+        {isUp && <ArrowUpRight className="w-3 h-3" />}
+        {isDown && <ArrowDownRight className="w-3 h-3" />}
+        {!isUp && !isDown && <span className="mr-1">-</span>}
+        {Math.abs(trend.threeMonthChangePercent).toFixed(1)}%
+      </div>
+      <svg width={width} height={height} className="overflow-visible">
+        <path
+          d={pathData}
+          fill="none"
+          className={`stroke-current ${colorClass}`}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </div>
+  );
+};
+
+const OneWeekTrendBadge = ({ trend }: { trend: MarketTrend }) => {
+  const isUp = trend.oneWeekChangePercent > 0;
+  const isDown = trend.oneWeekChangePercent < 0;
+  const colorClass = isUp ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : isDown ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : 'text-slate-400 bg-slate-500/10 border-slate-500/20';
+  
+  return (
+    <div className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border text-[10px] font-bold font-mono ${colorClass}`}>
+      {isUp && <ArrowUpRight className="w-3 h-3" />}
+      {isDown && <ArrowDownRight className="w-3 h-3" />}
+      {!isUp && !isDown && <span className="px-1">-</span>}
+      {Math.abs(trend.oneWeekChangePercent).toFixed(1)}%
+    </div>
+  );
+};
 
 export const ListingsTable: React.FC<ListingsTableProps> = ({
   listings,
@@ -37,6 +104,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   onFilterGeneration,
   metadata = CURRENT_RESEARCH_METADATA,
   catalogType = 'liveEbay',
+  trends = [],
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
@@ -536,8 +604,16 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
+                {catalogType === 'curatedBenchmark' && (
+                  <>
+                    <th className="py-3 px-3 whitespace-nowrap">1-Week Trend</th>
+                    <th className="py-3 px-3 whitespace-nowrap">90-Day Trend</th>
+                  </>
+                )}
                 <th className="py-3 px-3 whitespace-nowrap">Condition & Testing</th>
-                <th className="py-3 px-3 text-right whitespace-nowrap">Listing Action</th>
+                {catalogType === 'liveEbay' && (
+                  <th className="py-3 px-3 text-right whitespace-nowrap">Listing Action</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -554,6 +630,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   const bounds = skuPriceBounds.get(skuKey);
                   const isLowest = bounds && item.pricePerUnit === bounds.min;
                   const isHighest = bounds && item.pricePerUnit === bounds.max;
+                  const itemTrend = trends.find(t => t.generation === item.generation && t.capacityGB === item.capacityGB && t.speedMTs === item.speedMTs);
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
@@ -674,6 +751,26 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         </span>
                       </td>
 
+                      {/* Trends (Curated only) */}
+                      {catalogType === 'curatedBenchmark' && (
+                        <>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {itemTrend ? (
+                              <OneWeekTrendBadge trend={itemTrend} />
+                            ) : (
+                              <span className="text-slate-600 text-xs">—</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {itemTrend ? (
+                              <TrendSparkline trend={itemTrend} />
+                            ) : (
+                              <span className="text-slate-600 text-xs">—</span>
+                            )}
+                          </td>
+                        </>
+                      )}
+
                       {/* Condition & Tested */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <div className="text-slate-300 font-medium flex items-center gap-1">
@@ -690,22 +787,24 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                       </td>
 
                       {/* Listing Action / Direct Link */}
-                      <td className="py-3 px-3 whitespace-nowrap text-right">
-                        {item.sourceUrl ? (
-                          <a
-                            href={item.sourceUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border border-slate-700 hover:border-indigo-400 shadow-xs group"
-                            title={item.sourceDomain === 'ebay.com' ? 'Open live eBay listing in a new tab' : 'Open distributor source page'}
-                          >
-                            <span>{item.sourceDomain === 'ebay.com' ? 'View on eBay' : 'View Source'}</span>
-                            <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-white transition-colors" />
-                          </a>
-                        ) : (
-                          <span className="text-slate-600 text-xs">—</span>
-                        )}
-                      </td>
+                      {catalogType === 'liveEbay' && (
+                        <td className="py-3 px-3 whitespace-nowrap text-right">
+                          {item.sourceUrl ? (
+                            <a
+                              href={item.sourceUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border border-slate-700 hover:border-indigo-400 shadow-xs group"
+                              title={item.sourceDomain === 'ebay.com' ? 'Open live eBay listing in a new tab' : 'Open distributor source page'}
+                            >
+                              <span>{item.sourceDomain === 'ebay.com' ? 'View on eBay' : 'View Source'}</span>
+                              <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-white transition-colors" />
+                            </a>
+                          ) : (
+                            <span className="text-slate-600 text-xs">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   );
                 })

@@ -6,7 +6,7 @@ import { MarketTrends } from './components/MarketTrends';
 import { SpecsGuideModal } from './components/SpecsGuideModal';
 import { SchedulerModal } from './components/SchedulerModal';
 
-import { INITIAL_RAM_LISTINGS } from './data/initialMemoryData';
+import { INITIAL_EBAY_LISTINGS, INITIAL_CURATED_LISTINGS } from './data/initialMemoryData';
 import { CURRENT_RESEARCH_METADATA, DEFAULT_CRON_INFO, ResearchMetadata } from './data/researchMetadata';
 import { MARKET_TRENDS_DATA } from './data/marketTrendsData';
 import { RamListing, MemoryGeneration, MarketTrend } from './types';
@@ -14,8 +14,8 @@ import { Server, ArrowRight, Clock, Calendar, CheckCircle2, RefreshCw, Activity,
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'matrix' | 'listings' | 'curated' | 'trends'>('matrix');
-  const [liveEbayListings, setLiveEbayListings] = useState<RamListing[]>(INITIAL_RAM_LISTINGS);
-  const [curatedListings, setCuratedListings] = useState<RamListing[]>(INITIAL_RAM_LISTINGS);
+  const [liveEbayListings, setLiveEbayListings] = useState<RamListing[]>(INITIAL_EBAY_LISTINGS);
+  const [curatedListings, setCuratedListings] = useState<RamListing[]>(INITIAL_CURATED_LISTINGS);
   const [metadata, setMetadata] = useState<ResearchMetadata>(CURRENT_RESEARCH_METADATA);
   const [trends, setTrends] = useState<MarketTrend[]>(MARKET_TRENDS_DATA);
   const [cronInfo, setCronInfo] = useState<any>(DEFAULT_CRON_INFO);
@@ -47,7 +47,7 @@ export default function App() {
           if (Array.isArray(data.curatedListings) && data.curatedListings.length > 0) {
             setCuratedListings(data.curatedListings);
           } else {
-            setCuratedListings(INITIAL_RAM_LISTINGS);
+            setCuratedListings(INITIAL_CURATED_LISTINGS);
           }
 
           if (data.metadata) {
@@ -106,7 +106,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {activeTab === 'matrix' && (
           <div className="space-y-5">
             {/* Bento Quick Highlights Header */}
@@ -207,6 +207,7 @@ export default function App() {
             onFilterGeneration={setSelectedGeneration}
             metadata={metadata}
             catalogType="liveEbay"
+            trends={trends}
           />
         )}
 
@@ -217,6 +218,7 @@ export default function App() {
             onFilterGeneration={setSelectedGeneration}
             metadata={metadata}
             catalogType="curatedBenchmark"
+            trends={trends}
           />
         )}
 
@@ -230,7 +232,7 @@ export default function App() {
 
       {/* Footer */}
       <footer className="bg-slate-900/60 border-t border-slate-800 mt-12 py-5 text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-6 rounded bg-indigo-600 text-white flex items-center justify-center font-mono font-bold text-xs">
               ECC
