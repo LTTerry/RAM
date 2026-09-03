@@ -18,7 +18,7 @@ export interface RamListing {
   totalLotPrice?: number;
   lotQuantity: number;
   currency: string;
-  condition: 'Used (Tested)' | 'Refurbished' | 'System Pull' | 'Open Box' | 'New Surplus';
+  condition: 'Used (Tested)' | 'Refurbished' | 'System Pull' | 'Open Box' | 'New Surplus' | 'New';
   testedWorking: boolean;
   warranty?: string;
   sourceUrl: string;

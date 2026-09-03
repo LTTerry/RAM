@@ -206,7 +206,7 @@ export default function App() {
             </div>
 
             <MarketMatrix
-              listings={curatedListings}
+              listings={liveEbayListings}
               trends={trends}
               onSelectSpec={handleSelectMatrixSpec}
             />

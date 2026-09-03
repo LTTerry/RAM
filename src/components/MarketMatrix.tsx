@@ -52,7 +52,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
   };
 
   const DDR5_MONO_CONFIG = {
-    capacities: [16, 24, 32, 48, 64, 96, 128],
+    capacities: [16, 32, 48, 64, 96],
     speeds: [4800, 5600, 6400, 7200],
     speedLabels: {
       4800: '4800 MT/s (PC5-38400)',
@@ -87,53 +87,44 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
     const matched = listings.filter(l => {
       if (l.generation !== gen || l.capacityGB !== cap || l.speedMTs !== speed) return false;
       if (is3dsTab && l.moduleType !== '3DS RDIMM') return false;
-      // Note: Regular RDIMMs are monolithic
+      // Monolithic DDR5 excludes 3DS RDIMMs
       if (isMonoTab && l.moduleType === '3DS RDIMM') return false;
       return true;
     });
 
-    const trendsSource = trends && trends.length > 0 ? trends : MARKET_TRENDS_DATA;
-    const trendRecord = trendsSource.find(t => {
-      if (t.generation !== gen || t.capacityGB !== cap || t.speedMTs !== speed) return false;
-      // Heuristic: If it explicitly mentions 3DS in notes, it's 3DS.
-      const is3dsTrend = t.analysisNotes.toLowerCase().includes('3ds');
-      if (is3dsTab && !is3dsTrend && cap === 128) return false;
-      if (isMonoTab && is3dsTrend && cap === 128) return false;
-      return true;
-    });
-
-    const ebayActiveListings = matched.filter(
-      m => m.vendor === 'eBay' || m.sourceDomain?.toLowerCase().includes('ebay')
+    const activeListings = matched.filter(
+      m => m.vendor?.toLowerCase().includes('ebay') || m.sourceDomain?.toLowerCase().includes('ebay')
     );
 
-    const activeListings = ebayActiveListings.length > 0 ? ebayActiveListings : matched;
-
-    if (activeListings.length === 0 && !trendRecord) {
+    // Only display matrix cells when verified live listings exist
+    if (activeListings.length === 0) {
       return null;
     }
 
+    const trendsSource = trends && trends.length > 0 ? trends : MARKET_TRENDS_DATA;
+    const trendRecord = trendsSource.find(t => {
+      if (t.generation !== gen || t.capacityGB !== cap || t.speedMTs !== speed) return false;
+      const is3dsTrend = t.analysisNotes.toLowerCase().includes('3ds');
+      if (is3dsTab && !is3dsTrend && cap >= 128) return false;
+      if (isMonoTab && is3dsTrend && cap >= 128) return false;
+      return true;
+    });
+
     // Exact lowest and highest active listing
-    const lowestListing = activeListings.length > 0
-      ? activeListings.reduce((prev, curr) => curr.pricePerUnit < prev.pricePerUnit ? curr : prev, activeListings[0])
-      : null;
+    const lowestListing = activeListings.reduce((prev, curr) => curr.pricePerUnit < prev.pricePerUnit ? curr : prev, activeListings[0]);
+    const highestListing = activeListings.reduce((prev, curr) => curr.pricePerUnit > prev.pricePerUnit ? curr : prev, activeListings[0]);
 
-    const highestListing = activeListings.length > 0
-      ? activeListings.reduce((prev, curr) => curr.pricePerUnit > prev.pricePerUnit ? curr : prev, activeListings[0])
-      : null;
+    const calculatedAvg = Number((activeListings.reduce((a, b) => a + b.pricePerUnit, 0) / activeListings.length).toFixed(2));
 
-    // Synchronized with live Market Trends data from eBay API
-    const minPrice = trendRecord?.lowestAskingCurrent 
-      ?? (lowestListing ? lowestListing.pricePerUnit : 0);
-    const maxPrice = trendRecord?.highestAskingCurrent 
-      ?? (highestListing ? highestListing.pricePerUnit : 0);
-    
-    const avgPrice = trendRecord?.currentAvgPrice 
-      ?? (activeListings.length > 0 
-          ? activeListings.reduce((a, b) => a + b.pricePerUnit, 0) / activeListings.length 
-          : (minPrice + maxPrice) / 2);
+    const singleListings = activeListings.filter(l => l.lotQuantity === 1);
+    const singleUnitRetail = singleListings.length > 0
+      ? singleListings.reduce((prev, curr) => curr.pricePerUnit > prev.pricePerUnit ? curr : prev, singleListings[0]).pricePerUnit
+      : highestListing.pricePerUnit;
 
-    const singleUnitRetail = trendRecord?.singleUnitRetailPrice ?? maxPrice;
-    const wholesaleTrayFloor = trendRecord?.lowestAskingCurrent ?? minPrice;
+    const minPrice = lowestListing.pricePerUnit;
+    const maxPrice = highestListing.pricePerUnit;
+    const avgPrice = calculatedAvg;
+    const wholesaleTrayFloor = lowestListing.pricePerUnit;
 
     const spread = maxPrice - minPrice;
     const spreadPercent = minPrice > 0 ? (spread / minPrice) * 100 : 0;
@@ -391,8 +382,9 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                     if (!stats) {
                       return (
                         <td key={speed} className="py-3 px-3 text-center border-r border-slate-800/40 last:border-r-0">
-                          <div className="p-3 bg-slate-950/50 rounded-lg border border-dashed border-slate-800 text-[11px] text-slate-500">
-                            <span>No listing cached</span>
+                          <div className="py-4 px-2 bg-slate-950/40 rounded-lg border border-dashed border-slate-800/80 text-[11px] text-slate-500 flex flex-col items-center justify-center gap-1">
+                            <span className="text-slate-400 font-medium">No Active Listings</span>
+                            <span className="text-[10px] text-slate-600">0 eBay items</span>
                           </div>
                         </td>
                       );

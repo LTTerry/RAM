@@ -74,72 +74,169 @@ async function getEbayToken(appId: string, certId: string): Promise<string | nul
   }
 }
 
-// Extract lot quantity and calculate true per-unit price to prevent multi-pack/tray distortion
-function extractLotQuantityAndUnitPrice(title: string, rawPrice: number, referenceUnitPrice?: number): { lotQuantity: number; unitPrice: number } {
-  if (!title || rawPrice <= 0) return { lotQuantity: 1, unitPrice: rawPrice };
+// Extract genuine memory rank (e.g. 1Rx4, 2Rx4, 2Rx8, 4Rx4, 8Rx4) from title without confusing with lot counts
+function extractMemoryRank(title: string, capacityGB: number, generation: string): string {
+  if (!title) return '2Rx4';
+  const rankMatch = title.match(/\b([1248]R\s*[x*]\s*(?:4|8|16))\b/i);
+  if (rankMatch) {
+    return rankMatch[1].replace(/\s+/g, '').replace('*', 'x').toUpperCase();
+  }
+  if (/\bquad\s*rank\b/i.test(title)) return '4Rx4';
+  if (/\bdual\s*rank\b/i.test(title)) return '2Rx4';
+  if (/\bsingle\s*rank\b/i.test(title)) return '1Rx4';
+  if (/\boctal\s*rank\b/i.test(title)) return '8Rx4';
+  
+  const simpleRMatch = title.match(/\b([1248]R)\b/i);
+  if (simpleRMatch) return simpleRMatch[1].toUpperCase();
+
+  // Standard architectural defaults by density & generation
+  if (capacityGB >= 128 && generation === 'DDR4') return '4Rx4';
+  if (capacityGB >= 128 && generation === 'DDR5') return '4Rx4';
+  if (capacityGB <= 16 && generation === 'DDR4') return '1Rx4';
+  return '2Rx4';
+}
+
+// Extract true single module capacity, genuine lot quantity, and accurate unit price
+// CRITICAL DOMAIN LOGIC: In kit phrasing like "64GB 2 x 32GB" or "(4x16GB)", the single module capacity is 32GB / 16GB, NOT the kit total!
+function parseListingCapacityAndLot(title: string, rawPrice: number, fallbackCap: number): { capacityGB: number; lotQuantity: number; unitPrice: number } {
+  if (!title || rawPrice <= 0) return { capacityGB: fallbackCap, lotQuantity: 1, unitPrice: rawPrice };
   
   const t = title.toLowerCase();
+
+  // Clean out common rank, bus width, timing, and inventory strings so they cannot trigger lot regexes
+  const cleanT = t
+    .replace(/\b[1248]r\s*[x*]\s*(?:4|8|16)\b/gi, ' ') // 2Rx4, 1Rx8, 2Rx8, 4Rx4, 8Rx4
+    .replace(/\b[1248]r\b/gi, ' ') // 1R, 2R, 4R, 8R
+    .replace(/\b(?:\d+g|\d+m)\s*x\s*(?:72|4|8|16)\b/gi, ' ') // 2Gx72, 4Gx72, 2Gx4, 4Gx4, 1Gx8
+    .replace(/\b(?:qty|quantity)\s*(?:available|in\s*stock|on\s*hand|avail)\b/gi, ' ') // "Qty Available"
+    .replace(/\b(?:multiple|more\s+than)\s+qty\b/gi, ' ')
+    .replace(/\bpc[345][l]?-\d+[ru]?\b/gi, ' '); // PC4-21300R, etc.
+
   let lotQty = 1;
+  let singleCap = fallbackCap;
 
-  // 1. "lot of X", "lot of: X", "lot of (X)"
-  const lotOfMatch = t.match(/\blot\s*(?:of)?\s*[:#]?\s*\(?(\d+)\)?\b/i);
-  if (lotOfMatch) {
-    const val = parseInt(lotOfMatch[1], 10);
-    if (val > 1 && val <= 500) lotQty = val;
-  }
-
-  // 2. "qty X", "qty: X", "quantity X"
-  if (lotQty === 1) {
-    const qtyMatch = t.match(/\b(?:qty|quantity)\s*[:#]?\s*\(?(\d+)\)?\b/i);
-    if (qtyMatch) {
-      const val = parseInt(qtyMatch[1], 10);
-      if (val > 1 && val <= 500) lotQty = val;
+  // 1. Explicit multi-module capacity pattern: "2x16GB", "2 x 32GB", "4x16GB", "8x8GB", "24x16GB", "4x4GB", "2x64GB"
+  // Handles "(2x16GB)", "2 x 32GB", "4X16GB", "8 x 16GB", "2x 32GB = 64GB"
+  const multiCapMatch = cleanT.match(/\b(\d+)\s*x\s*(\d+)\s*(?:gb|g)\b/i);
+  if (multiCapMatch) {
+    const q = parseInt(multiCapMatch[1], 10);
+    const c = parseInt(multiCapMatch[2], 10);
+    if (q === 1 && c > 0) {
+      singleCap = c;
+    } else if (q > 1 && q <= 500 && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(c)) {
+      lotQty = q;
+      singleCap = c;
     }
   }
 
-  // 3. "X pack", "X-pack", "X pk", "pack of X"
+  // 2. Leading brand multiplier, e.g. "12x Micron 96GB(1x96GB)" or "19x Mixed SK Hynix 16GB"
   if (lotQty === 1) {
-    const packMatch = t.match(/\b(?:pack\s*of\s*(\d+)|(\d+)\s*[- ]?(?:pack|pk))\b/i);
-    if (packMatch) {
-      const val = parseInt(packMatch[1] || packMatch[2], 10);
-      if (val > 1 && val <= 500) lotQty = val;
+    const leadingBrandXMatch = cleanT.match(/\b(\d+)\s*x\s+(?:samsung|sk\s*hynix|hynix|micron|kingston|dell|hp|hpe|lenovo|mixed|cisco|ecc|rdimm|server)\b/i);
+    if (leadingBrandXMatch) {
+      const q = parseInt(leadingBrandXMatch[1], 10);
+      if (q > 1 && q <= 500) {
+        lotQty = q;
+        const capAfterBrand = cleanT.match(/\b(\d+)\s*x\s+[a-z0-9\s-]+?\s+(\d+)\s*(?:gb|g)\b/i);
+        if (capAfterBrand && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capAfterBrand[2], 10))) {
+          singleCap = parseInt(capAfterBrand[2], 10);
+        }
+      }
     }
   }
 
-  // 4. "matched pair", "pair of 2", "2 sticks"
+  // 3. Explicit Lot Phrasing: "lot of X", "lot: X", "lot #X", "bulk lot of X", "[ LOT OF 10 ]"
   if (lotQty === 1) {
-    if (/\b(?:matched\s+pair|pair\s+of\s+2|2\s*(?:x\s*)?sticks|kit\s*of\s*2)\b/i.test(t)) {
-      lotQty = 2;
-    } else if (/\b(?:kit\s*of\s*4|4\s*(?:x\s*)?sticks)\b/i.test(t)) {
-      lotQty = 4;
-    }
-  }
-
-  // 5. "4x", "8x", "16x", "32x", "64x" (ensure not rank like 1Rx4, 2Rx4, 2Rx8, 4Rx4, 8Rx4)
-  if (lotQty === 1) {
-    const xMatch = t.match(/(?<![0-9]r)\b(\d+)\s*x\b/i);
-    if (xMatch) {
-      const val = parseInt(xMatch[1], 10);
+    const lotOfMatch = cleanT.match(/\b(?:bulk\s+)?lot\s*(?:of)?\s*[:#]?\s*\(?(\d+)\)?\b/i);
+    if (lotOfMatch) {
+      const val = parseInt(lotOfMatch[1], 10);
       if (val > 1 && val <= 500) {
         lotQty = val;
+        const capMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+        if (capMatch && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capMatch[1], 10))) {
+          singleCap = parseInt(capMatch[1], 10);
+        }
       }
     }
   }
 
-  let unitPrice = rawPrice / lotQty;
-
-  // 6. If the unitPrice is still over 3x the reference price, check if title didn't specify quantity but price is a bulk tray
-  if (referenceUnitPrice && referenceUnitPrice > 0) {
-    if (unitPrice > referenceUnitPrice * 3.2) {
-      const impliedQty = Math.round(rawPrice / referenceUnitPrice);
-      if (impliedQty >= 2 && impliedQty <= 200) {
-        unitPrice = rawPrice / impliedQty;
-        lotQty = impliedQty;
+  // 4. Pack Phrasing: "X pack", "X-pack", "X pk", "pack of X"
+  if (lotQty === 1) {
+    const packMatch = cleanT.match(/\b(?:pack\s*of\s*(\d+)|(\d+)\s*[- ]?(?:pack|pk))\b/i);
+    if (packMatch) {
+      const val = parseInt(packMatch[1] || packMatch[2], 10);
+      if (val > 1 && val <= 500) {
+        lotQty = val;
+        const capMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+        if (capMatch && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capMatch[1], 10))) {
+          singleCap = parseInt(capMatch[1], 10);
+        }
       }
     }
   }
 
-  return { lotQuantity: lotQty, unitPrice: Number(unitPrice.toFixed(2)) };
+  // 5. Kit & Pair Phrasing: "matched pair", "pair of 2", "kit of X"
+  if (lotQty === 1) {
+    if (/\b(?:matched\s+pair|pair\s+of\s+2|pair)\b/i.test(cleanT)) {
+      lotQty = 2;
+      const capMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+      if (capMatch && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capMatch[1], 10))) {
+        singleCap = parseInt(capMatch[1], 10);
+      }
+    } else {
+      const kitMatch = cleanT.match(/\bkit\s*of\s*(\d+)\b/i);
+      if (kitMatch) {
+        const val = parseInt(kitMatch[1], 10);
+        if (val > 1 && val <= 500) {
+          lotQty = val;
+          const capMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+          if (capMatch && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capMatch[1], 10))) {
+            singleCap = parseInt(capMatch[1], 10);
+          }
+        }
+      }
+    }
+  }
+
+  // 6. Explicit module counts: "X sticks", "X modules", "X dimms", "X pcs", "X pieces", "in 24 Samsung"
+  if (lotQty === 1) {
+    const sticksMatch = cleanT.match(/\b(\d+)\s*(?:sticks|modules|dimms|pcs|pieces)\b/i);
+    if (sticksMatch) {
+      const val = parseInt(sticksMatch[1], 10);
+      if (val > 1 && val <= 500) {
+        lotQty = val;
+        const capMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+        if (capMatch && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capMatch[1], 10))) {
+          singleCap = parseInt(capMatch[1], 10);
+        }
+      }
+    } else {
+      const inXMatch = cleanT.match(/\bin\s+(\d+)\s+(?:samsung|sk\s*hynix|hynix|micron|kingston|dell|hp|hpe|lenovo)\b/i);
+      if (inXMatch) {
+        const val = parseInt(inXMatch[1], 10);
+        if (val > 1 && val <= 500) {
+          lotQty = val;
+          const capMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+          if (capMatch && [4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(parseInt(capMatch[1], 10))) {
+            singleCap = parseInt(capMatch[1], 10);
+          }
+        }
+      }
+    }
+  }
+
+  // If still single module and no multiCapMatch, verify single capacity in title
+  if (lotQty === 1 && !multiCapMatch) {
+    const singleCapMatch = cleanT.match(/\b(\d+)\s*(?:gb|g)\b/i);
+    if (singleCapMatch) {
+      const c = parseInt(singleCapMatch[1], 10);
+      if ([4, 8, 16, 24, 32, 48, 64, 96, 128, 256].includes(c)) {
+        singleCap = c;
+      }
+    }
+  }
+
+  const unitPrice = Number((rawPrice / lotQty).toFixed(2));
+  return { capacityGB: singleCap, lotQuantity: lotQty, unitPrice };
 }
 
 function buildSpeedStandard(gen: string, speed: number): string {
@@ -218,7 +315,7 @@ async function searchEbayPrices(token: string, trend: any) {
       const raw = parseFloat(item.price?.value || '0');
       const title = item.title || '';
       if (raw <= 0) return;
-      const normalized = extractLotQuantityAndUnitPrice(title, raw, refPrice);
+      const normalized = parseListingCapacityAndLot(title, raw, trend.capacityGB);
       if (normalized.unitPrice <= 0) return;
 
       unitPrices.push(normalized.unitPrice);
@@ -232,13 +329,13 @@ async function searchEbayPrices(token: string, trend: any) {
         cond.toLowerCase().includes('new') ? 'New Surplus' : 'Used (Tested)';
 
       skuItems.push({
-        id: `ebay-${trend.generation.toLowerCase()}-${trend.capacityGB}-${trend.speedMTs}-${cleanId}-${idx}`,
+        id: `ebay-${trend.generation.toLowerCase()}-${normalized.capacityGB}-${trend.speedMTs}-${cleanId}-${idx}`,
         generation: trend.generation,
-        capacityGB: trend.capacityGB,
+        capacityGB: normalized.capacityGB,
         speedMTs: trend.speedMTs,
         speedStandard: buildSpeedStandard(trend.generation, trend.speedMTs),
-        moduleType: (trend.capacityGB >= 128 && trend.generation === 'DDR4') ? 'LRDIMM' : (trend.generation === 'DDR5' && trend.capacityGB >= 128) ? '3DS RDIMM' : 'RDIMM',
-        rank: normalized.lotQuantity > 1 ? `Lot of ${normalized.lotQuantity}x` : '2Rx4',
+        moduleType: (normalized.capacityGB >= 128 && trend.generation === 'DDR4') ? 'LRDIMM' : (trend.generation === 'DDR5' && normalized.capacityGB >= 128) ? '3DS RDIMM' : 'RDIMM',
+        rank: extractMemoryRank(title, normalized.capacityGB, trend.generation),
         voltage: trend.generation === 'DDR5' ? '1.1V' : trend.generation === 'DDR4' ? '1.2V' : '1.5V',
         vendor: `eBay (${sellerName})`,
         vendorType: 'Marketplace',
