@@ -303,14 +303,18 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
 
                     {/* 90-Day Change */}
                     <td className="py-3 px-3.5 text-center whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded font-semibold text-[10px] font-mono ${
-                        isDown ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                        isUp ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                        'bg-slate-800 text-slate-300'
-                      }`}>
-                        {isDown ? <TrendingDown className="w-3 h-3 text-emerald-400" /> : <TrendingUp className="w-3 h-3 text-rose-400" />}
-                        {trend.threeMonthChangePercent > 0 ? `+${trend.threeMonthChangePercent}%` : `${trend.threeMonthChangePercent}%`}
-                      </span>
+                      {trend.threeMonthChangePercent !== null && trend.threeMonthChangePercent !== undefined ? (
+                        <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded font-semibold text-[10px] font-mono ${
+                          isDown ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                          isUp ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                          'bg-slate-800 text-slate-300'
+                        }`}>
+                          {isDown ? <TrendingDown className="w-3 h-3 text-emerald-400" /> : isUp ? <TrendingUp className="w-3 h-3 text-rose-400" /> : <Minus className="w-3 h-3 text-slate-400" />}
+                          {trend.threeMonthChangePercent > 0 ? `+${trend.threeMonthChangePercent}%` : `${trend.threeMonthChangePercent}%`}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-slate-500 font-mono italic">Gathering Data...</span>
+                      )}
                     </td>
 
                     {/* Retail Price/GB */}

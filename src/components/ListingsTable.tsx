@@ -34,7 +34,7 @@ interface ListingsTableProps {
 
 const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
   if (trend.threeMonthChangePercent === null || trend.threeMonthChangePercent === undefined) {
-    return <div className="text-xs text-slate-500 italic">Gathering Data...</div>;
+    return <span className="text-slate-500 font-mono text-xs font-semibold">N/A</span>;
   }
   const points = [
     trend.avgPrice3MoAgo,
@@ -88,7 +88,7 @@ const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
 
 const OneWeekTrendBadge = ({ trend }: { trend: MarketTrend }) => {
   if (trend.oneWeekChangePercent === null || trend.oneWeekChangePercent === undefined) {
-    return <div className="text-xs text-slate-500 italic">Gathering Data...</div>;
+    return <span className="text-slate-500 font-mono text-xs font-semibold">N/A</span>;
   }
   const isUp = trend.oneWeekChangePercent > 0;
   const isDown = trend.oneWeekChangePercent < 0;
@@ -610,22 +610,23 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
-                {catalogType === 'curatedBenchmark' && (
+                <th className="py-3 px-3 whitespace-nowrap">Condition & Testing</th>
+                {catalogType === 'curatedBenchmark' ? (
                   <>
                     <th className="py-3 px-3 whitespace-nowrap">1-Week Trend</th>
                     <th className="py-3 px-3 whitespace-nowrap">90-Day Trend</th>
                   </>
-                )}
-                <th className="py-3 px-3 whitespace-nowrap">Condition & Testing</th>
-                {catalogType === 'liveEbay' && (
-                  <th className="py-3 px-3 text-right whitespace-nowrap">Listing Action</th>
+                ) : (
+                  <th className="py-3 px-3 text-right whitespace-nowrap">
+                    Listing Action
+                  </th>
                 )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredListings.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="py-8 text-center text-slate-500">
+                  <td colSpan={11} className="py-8 text-center text-slate-500">
                     No memory listings match your selected filter criteria.
                   </td>
                 </tr>
@@ -757,26 +758,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         </span>
                       </td>
 
-                      {/* Trends (Curated only) */}
-                      {catalogType === 'curatedBenchmark' && (
-                        <>
-                          <td className="py-3 px-3 whitespace-nowrap">
-                            {itemTrend ? (
-                              <OneWeekTrendBadge trend={itemTrend} />
-                            ) : (
-                              <span className="text-slate-600 text-xs">—</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 whitespace-nowrap">
-                            {itemTrend ? (
-                              <TrendSparkline trend={itemTrend} />
-                            ) : (
-                              <span className="text-slate-600 text-xs">—</span>
-                            )}
-                          </td>
-                        </>
-                      )}
-
                       {/* Condition & Tested */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <div className="text-slate-300 font-medium flex items-center gap-1">
@@ -792,8 +773,28 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         </div>
                       </td>
 
-                      {/* Listing Action / Direct Link */}
-                      {catalogType === 'liveEbay' && (
+                      {/* Trends (Curated Benchmark only) */}
+                      {catalogType === 'curatedBenchmark' && (
+                        <>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {itemTrend && itemTrend.oneWeekChangePercent !== null && itemTrend.oneWeekChangePercent !== undefined ? (
+                              <OneWeekTrendBadge trend={itemTrend} />
+                            ) : (
+                              <span className="text-slate-500 font-mono text-xs font-semibold">N/A</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-3 whitespace-nowrap">
+                            {itemTrend && itemTrend.threeMonthChangePercent !== null && itemTrend.threeMonthChangePercent !== undefined ? (
+                              <TrendSparkline trend={itemTrend} />
+                            ) : (
+                              <span className="text-slate-500 font-mono text-xs font-semibold">N/A</span>
+                            )}
+                          </td>
+                        </>
+                      )}
+
+                      {/* Listing Action / Direct Link (Live eBay Marketplace only) */}
+                      {catalogType !== 'curatedBenchmark' && (
                         <td className="py-3 px-3 whitespace-nowrap text-right">
                           {item.sourceUrl ? (
                             <a
@@ -801,9 +802,9 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border border-slate-700 hover:border-indigo-400 shadow-xs group"
-                              title={item.sourceDomain === 'ebay.com' ? 'Open live eBay listing in a new tab' : 'Open distributor source page'}
+                              title="Open live eBay listing in a new tab"
                             >
-                              <span>{item.sourceDomain === 'ebay.com' ? 'View on eBay' : 'View Source'}</span>
+                              <span>View on eBay</span>
                               <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-white transition-colors" />
                             </a>
                           ) : (

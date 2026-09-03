@@ -18,6 +18,7 @@ export default function App() {
   const [curatedListings, setCuratedListings] = useState<RamListing[]>(INITIAL_CURATED_LISTINGS);
   const [metadata, setMetadata] = useState<ResearchMetadata>(CURRENT_RESEARCH_METADATA);
   const [trends, setTrends] = useState<MarketTrend[]>(MARKET_TRENDS_DATA);
+  const [curatedTrends, setCuratedTrends] = useState<MarketTrend[]>([]);
   const [cronInfo, setCronInfo] = useState<any>(DEFAULT_CRON_INFO);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedGeneration, setSelectedGeneration] = useState<MemoryGeneration | 'ALL'>('ALL');
@@ -46,14 +47,13 @@ export default function App() {
           } else {
             setCuratedListings(INITIAL_CURATED_LISTINGS);
           }
+          if (Array.isArray(curatedData.trends) && curatedData.trends.length > 0) {
+            setCuratedTrends(curatedData.trends);
+          } else {
+            setCuratedTrends([]);
+          }
           if (curatedData.metadata) {
             setMetadata(curatedData.metadata);
-          }
-          if (Array.isArray(curatedData.trends) && curatedData.trends.length > 0) {
-            setTrends(curatedData.trends);
-          }
-          if (curatedData.cronInfo) {
-            setCronInfo(curatedData.cronInfo);
           }
         }
       }
@@ -65,6 +65,12 @@ export default function App() {
             setLiveEbayListings(ebayData.ebayListings);
           } else if (Array.isArray(ebayData.listings) && ebayData.listings.length > 0) {
             setLiveEbayListings(ebayData.listings);
+          }
+          if (Array.isArray(ebayData.trends) && ebayData.trends.length > 0) {
+            setTrends(ebayData.trends);
+          }
+          if (ebayData.cronInfo) {
+            setCronInfo(ebayData.cronInfo);
           }
         }
       }
@@ -225,7 +231,7 @@ export default function App() {
             onFilterGeneration={setSelectedGeneration}
             metadata={metadata}
             catalogType="curatedBenchmark"
-            trends={trends}
+            trends={curatedTrends}
           />
         )}
 

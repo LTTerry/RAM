@@ -199,8 +199,12 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                   <Server className="w-3.5 h-3.5 text-emerald-400" /> Repository File Status
                 </span>
                 <div className="flex items-center justify-between font-mono pt-1">
-                  <span className="text-slate-300">curated-data.json & ebay-data.json:</span>
-                  <span className="text-emerald-400 font-bold">Updated</span>
+                  <span className="text-slate-300">curated-data.json:</span>
+                  <span className="text-emerald-400 font-bold">90-Day Benchmark Catalog</span>
+                </div>
+                <div className="flex items-center justify-between font-mono">
+                  <span className="text-slate-300">ebay-data.json:</span>
+                  <span className="text-emerald-400 font-bold">eBay Listings & 3-Mo Trends</span>
                 </div>
                 <div className="flex items-center justify-between font-mono">
                   <span className="text-slate-300">ebay-sync.log:</span>
