@@ -33,6 +33,9 @@ interface ListingsTableProps {
 }
 
 const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
+  if (trend.threeMonthChangePercent === null || trend.threeMonthChangePercent === undefined) {
+    return <div className="text-xs text-slate-500 italic">Gathering Data...</div>;
+  }
   const points = [
     trend.avgPrice3MoAgo,
     trend.avgPrice2MoAgo,
@@ -84,6 +87,9 @@ const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
 };
 
 const OneWeekTrendBadge = ({ trend }: { trend: MarketTrend }) => {
+  if (trend.oneWeekChangePercent === null || trend.oneWeekChangePercent === undefined) {
+    return <div className="text-xs text-slate-500 italic">Gathering Data...</div>;
+  }
   const isUp = trend.oneWeekChangePercent > 0;
   const isDown = trend.oneWeekChangePercent < 0;
   const colorClass = isUp ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : isDown ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' : 'text-slate-400 bg-slate-500/10 border-slate-500/20';

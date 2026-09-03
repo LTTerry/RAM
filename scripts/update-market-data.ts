@@ -11,6 +11,8 @@ import { CURRENT_RESEARCH_METADATA } from '../src/data/researchMetadata.js';
 
 dotenv.config();
 
+const CURATED_DATA_FILE = path.join(process.cwd(), 'public', 'curated-data.json');
+const EBAY_DATA_FILE = path.join(process.cwd(), 'public', 'ebay-data.json');
 const DATA_FILE = path.join(process.cwd(), 'public', 'market-data.json');
 const EBAY_LOG_FILE = path.join(process.cwd(), 'public', 'ebay-sync.log');
 
@@ -330,20 +332,41 @@ async function updateMarketData() {
   let serverEbaySold = [...EBAY_SOLD_RECORDS];
   let serverMetadata = { ...CURRENT_RESEARCH_METADATA };
   let cronLogs: any[] = [];
+  let historicalSnapshots: any[] = [];
   
   // Try to load existing data so we don't lose logs or previous state
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-      const parsed = JSON.parse(raw);
-      if (parsed.listings && parsed.trends) {
+    const curatedExists = fs.existsSync(CURATED_DATA_FILE);
+    const ebayExists = fs.existsSync(EBAY_DATA_FILE);
+    const oldExists = fs.existsSync(DATA_FILE);
+    
+    let curatedParsed = null;
+    let ebayParsed = null;
+
+    if (curatedExists && ebayExists) {
+        curatedParsed = JSON.parse(fs.readFileSync(CURATED_DATA_FILE, 'utf-8'));
+        ebayParsed = JSON.parse(fs.readFileSync(EBAY_DATA_FILE, 'utf-8'));
+    } else if (oldExists) {
+        curatedParsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
+        ebayParsed = curatedParsed; // fallback to same structure for migration
+    }
+
+    if (curatedParsed && curatedParsed.trends) {
+      const parsed = curatedParsed;
+      const parsedEbay = ebayParsed || parsed;
         serverListings = [...INITIAL_CURATED_LISTINGS];
-        serverTrends = parsed.trends;
-        serverEbaySold = parsed.ebaySold || serverEbaySold;
+        serverTrends = parsed.trends.map((t: any) => {
+          const initT = MARKET_TRENDS_DATA.find(it => it.generation === t.generation && it.capacityGB === t.capacityGB && it.speedMTs === t.speedMTs);
+          return {
+            ...t,
+            avgPrice1WeekAgo: t.avgPrice1WeekAgo !== undefined && t.avgPrice1WeekAgo !== null ? t.avgPrice1WeekAgo : (initT?.avgPrice1WeekAgo || t.currentAvgPrice)
+          };
+        });
+        serverEbaySold = parsedEbay.ebaySold || serverEbaySold;
         serverMetadata = parsed.metadata || serverMetadata;
         cronLogs = parsed.cronInfo?.recentLogs || [];
+        historicalSnapshots = parsed.historicalSnapshots || [];
       }
-    }
   } catch (e) {
     console.warn('[GitHub Actions] No existing data file found, using defaults.');
   }
@@ -519,21 +542,77 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
     }
   }
 
-  // Recalculate maths
+  
+    const nowIso = new Date().toISOString();
+  const todayMs = Date.now();
+  
+  // Save today's snapshot
+  historicalSnapshots.push({
+    date: nowIso,
+    timestamp: todayMs,
+    trends: serverTrends.map(t => ({
+      generation: t.generation,
+      capacityGB: t.capacityGB,
+      speedMTs: t.speedMTs,
+      currentAvgPrice: t.currentAvgPrice
+    }))
+  });
+
+  // Prune snapshots older than 95 days
+  const ninetyFiveDaysMs = 95 * 24 * 60 * 60 * 1000;
+  historicalSnapshots = historicalSnapshots.filter(snap => todayMs - snap.timestamp < ninetyFiveDaysMs);
+
+  // Recalculate maths dynamically from snapshots
   serverTrends = serverTrends.map((trend) => {
-    const changePct = ((trend.currentAvgPrice - trend.avgPrice3MoAgo) / trend.avgPrice3MoAgo) * 100;
-    const weekChangePct = ((trend.currentAvgPrice - trend.avgPrice1WeekAgo) / trend.avgPrice1WeekAgo) * 100;
+    // Find closest snapshot to 7 days ago
+    const target7DaysMs = todayMs - (7 * 24 * 60 * 60 * 1000);
+    // Find closest snapshot to 90 days ago
+    const target90DaysMs = todayMs - (90 * 24 * 60 * 60 * 1000);
+
+    let snap7Days = null;
+    let snap90Days = null;
+    let snap7Diff = Infinity;
+    let snap90Diff = Infinity;
+
+    for (const snap of historicalSnapshots) {
+      const diff7 = Math.abs(snap.timestamp - target7DaysMs);
+      const diff90 = Math.abs(snap.timestamp - target90DaysMs);
+      
+      // Only accept if within 2 days of the target
+      if (diff7 < snap7Diff && diff7 <= 2 * 24 * 60 * 60 * 1000) {
+        snap7Diff = diff7;
+        snap7Days = snap;
+      }
+      if (diff90 < snap90Diff && diff90 <= 5 * 24 * 60 * 60 * 1000) {
+        snap90Diff = diff90;
+        snap90Days = snap;
+      }
+    }
+
+    const match7 = snap7Days ? snap7Days.trends.find((t: any) => t.generation === trend.generation && t.capacityGB === trend.capacityGB && t.speedMTs === trend.speedMTs) : null;
+    const match90 = snap90Days ? snap90Days.trends.find((t: any) => t.generation === trend.generation && t.capacityGB === trend.capacityGB && t.speedMTs === trend.speedMTs) : null;
+
+    let weekChangePct = null;
+    if (match7 && match7.currentAvgPrice) {
+      weekChangePct = ((trend.currentAvgPrice - match7.currentAvgPrice) / match7.currentAvgPrice) * 100;
+    }
+    
+    let changePct = null;
+    if (match90 && match90.currentAvgPrice) {
+      changePct = ((trend.currentAvgPrice - match90.currentAvgPrice) / match90.currentAvgPrice) * 100;
+    }
+
     const pricePerGb = Math.round((trend.currentAvgPrice / trend.capacityGB) * 100) / 100;
+    
     return {
       ...trend,
-      threeMonthChangePercent: Math.round(changePct * 10) / 10,
-      oneWeekChangePercent: Math.round(weekChangePct * 10) / 10,
-      trendDirection: changePct > 0.5 ? 'up' : changePct < -0.5 ? 'down' : 'stable',
+      threeMonthChangePercent: changePct !== null ? Math.round(changePct * 10) / 10 : null,
+      oneWeekChangePercent: weekChangePct !== null ? Math.round(weekChangePct * 10) / 10 : null,
+      trendDirection: changePct !== null && changePct > 0.5 ? 'up' : changePct !== null && changePct < -0.5 ? 'down' : 'stable',
       pricePerGB: pricePerGb,
     };
   });
 
-  const nowIso = new Date().toISOString();
   serverListings = serverListings.map((listing) => ({
     ...listing,
     scrapedAt: nowIso,
@@ -554,14 +633,11 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
   cronLogs.unshift(logEntry);
   if (cronLogs.length > 50) cronLogs.pop();
 
-  const payload = {
+  const curatedPayload = {
     success: true,
     metadata: serverMetadata,
     curatedListings: serverListings,
-    ebayListings: allLiveEbayListings,
-    listings: allLiveEbayListings.length > 0 ? allLiveEbayListings : serverListings,
     trends: serverTrends,
-    ebaySold: serverEbaySold,
     cronInfo: {
       schedule: '0 0 * * *',
       scheduleDescription: 'GitHub Actions workflow triggers daily at 08:00 AM UTC+8 (00:00 UTC)',
@@ -576,11 +652,19 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
       jsonUpdated: true,
       dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',
       recentLogs: cronLogs,
-    }
+    },
+    historicalSnapshots
   };
 
-  fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf-8');
-  console.log(`[GitHub Actions] Successfully updated ${DATA_FILE}`);
+  const ebayPayload = {
+    success: true,
+    ebayListings: allLiveEbayListings,
+    ebaySold: serverEbaySold,
+  };
+
+  fs.writeFileSync(CURATED_DATA_FILE, JSON.stringify(curatedPayload, null, 2), 'utf-8');
+  fs.writeFileSync(EBAY_DATA_FILE, JSON.stringify(ebayPayload, null, 2), 'utf-8');
+  console.log(`[GitHub Actions] Successfully updated ${CURATED_DATA_FILE} and ${EBAY_DATA_FILE}`);
 
   logSyncMessage(`=== SYNC FINISHED - Total SKUs: ${serverTrends.length}, Success: ${skuSuccessCount}, Failed: ${skuFailCount} - Source: ${usedEbay ? 'eBay Production API' : 'Gemini Fallback Search'} - Overall: ${skuFailCount === 0 ? 'SUCCESS' : skuSuccessCount > 0 ? 'PARTIAL SUCCESS' : 'FAILED'} ===`);
 }

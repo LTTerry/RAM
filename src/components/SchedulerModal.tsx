@@ -155,14 +155,14 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-2.5">
               <div className="flex items-center gap-2">
                 <Database className="w-4 h-4 text-indigo-400" />
-                <span className="text-xs font-bold text-white tracking-wide">eBay API Research & market-data.json Status</span>
+                <span className="text-xs font-bold text-white tracking-wide">eBay API Research & curated-data.json & ebay-data.json Status</span>
               </div>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full flex items-center gap-1 font-semibold ${
                 cronInfo?.jsonUpdated !== false
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
               }`}>
-                <CheckCircle2 className="w-3 h-3" /> {cronInfo?.jsonUpdated !== false ? 'market-data.json Updated & Committed' : 'Update Pending'}
+                <CheckCircle2 className="w-3 h-3" /> {cronInfo?.jsonUpdated !== false ? 'curated-data.json & ebay-data.json Updated & Committed' : 'Update Pending'}
               </span>
             </div>
             
@@ -199,7 +199,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                   <Server className="w-3.5 h-3.5 text-emerald-400" /> Repository File Status
                 </span>
                 <div className="flex items-center justify-between font-mono pt-1">
-                  <span className="text-slate-300">market-data.json:</span>
+                  <span className="text-slate-300">curated-data.json & ebay-data.json:</span>
                   <span className="text-emerald-400 font-bold">Updated</span>
                 </div>
                 <div className="flex items-center justify-between font-mono">
