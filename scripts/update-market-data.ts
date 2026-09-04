@@ -13,7 +13,6 @@ dotenv.config();
 
 const CURATED_DATA_FILE = path.join(process.cwd(), 'public', 'curated-data.json');
 const EBAY_DATA_FILE = path.join(process.cwd(), 'public', 'ebay-data.json');
-const DATA_FILE = path.join(process.cwd(), 'public', 'market-data.json');
 const EBAY_LOG_FILE = path.join(process.cwd(), 'public', 'ebay-sync.log');
 
 function logSyncMessage(msg: string) {
@@ -436,17 +435,15 @@ async function updateMarketData() {
   try {
     const curatedExists = fs.existsSync(CURATED_DATA_FILE);
     const ebayExists = fs.existsSync(EBAY_DATA_FILE);
-    const oldExists = fs.existsSync(DATA_FILE);
     
     let curatedParsed: any = null;
     let ebayParsed: any = null;
 
-    if (curatedExists && ebayExists) {
+    if (curatedExists) {
       curatedParsed = JSON.parse(fs.readFileSync(CURATED_DATA_FILE, 'utf-8'));
+    }
+    if (ebayExists) {
       ebayParsed = JSON.parse(fs.readFileSync(EBAY_DATA_FILE, 'utf-8'));
-    } else if (oldExists) {
-      curatedParsed = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
-      ebayParsed = curatedParsed; // fallback for initial migration
     }
 
     if (curatedParsed && Array.isArray(curatedParsed.curatedListings)) {
