@@ -10891,7 +10891,7 @@
   "cronInfo": {
     "schedule": "0 0 * * *",
     "scheduleDescription": "GitHub Actions workflow triggers daily at 08:00 AM UTC+8 (00:00 UTC)",
-    "lastRun": "2026-09-03T11:09:53.816Z",
+    "lastRun": "2026-09-03T11:09:40.752Z",
     "nextRun": "Managed by GitHub Actions schedule",
     "isRefreshing": false,
     "storageType": "Static JSON on GitHub Pages ($0 Hosting/DB Cost)",
@@ -12044,5 +12044,15 @@
         }
       ]
     }
-  ]
+  ],
+  "metadata": {
+    "lastUpdatedDate": "September 3, 2026",
+    "lastUpdatedDay": "Thursday",
+    "lastUpdatedTime": "07:09 PM",
+    "timezone": "UTC+8 (Hong Kong Time)",
+    "formattedFullTimestamp": "Thursday, September 3, 2026 at 07:09 PM (UTC+8)",
+    "researchQuarter": "Q3 2026",
+    "totalSkusAudited": 347,
+    "marketScope": "eBay Browse API (347 Verified Active Seller Listings)"
+  }
 }

@@ -10,6 +10,7 @@ import { INITIAL_EBAY_LISTINGS, INITIAL_CURATED_LISTINGS } from './data/initialM
 import { CURRENT_RESEARCH_METADATA, DEFAULT_CRON_INFO, ResearchMetadata } from './data/researchMetadata';
 import { MARKET_TRENDS_DATA } from './data/marketTrendsData';
 import { RamListing, MemoryGeneration, MarketTrend } from './types';
+import { SupportedTimezone, formatToTimezone } from './utils/timeFormat';
 import { Server, ArrowRight, Clock, Calendar, CheckCircle2, RefreshCw, Activity, Zap } from 'lucide-react';
 
 export default function App() {
@@ -24,6 +25,22 @@ export default function App() {
   const [selectedGeneration, setSelectedGeneration] = useState<MemoryGeneration | 'ALL'>('ALL');
   const [isSpecsGuideOpen, setIsSpecsGuideOpen] = useState(false);
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
+  const [selectedTimezone, setSelectedTimezone] = useState<SupportedTimezone>(() => {
+    try {
+      const saved = localStorage.getItem('itad_memory_timezone');
+      if (saved && ['Asia/Hong_Kong', 'UTC', 'local', 'America/Los_Angeles', 'America/New_York'].includes(saved)) {
+        return saved as SupportedTimezone;
+      }
+    } catch {}
+    return 'Asia/Hong_Kong';
+  });
+
+  const handleTimezoneChange = (tz: SupportedTimezone) => {
+    setSelectedTimezone(tz);
+    try {
+      localStorage.setItem('itad_memory_timezone', tz);
+    } catch {}
+  };
 
   // Fetch static market data from GitHub Pages host on load
   const fetchMarketData = async () => {
@@ -116,6 +133,8 @@ export default function App() {
         onOpenSpecsGuide={() => setIsSpecsGuideOpen(true)}
         onOpenScheduler={() => setIsSchedulerOpen(true)}
         metadata={metadata}
+        selectedTimezone={selectedTimezone}
+        onTimezoneChange={handleTimezoneChange}
       />
 
       {/* Main Content Area */}
@@ -152,7 +171,7 @@ export default function App() {
                   <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px] bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
                     <Clock className="w-4 h-4 text-amber-400 shrink-0" />
                     <span>
-                      Research Updated: <strong className="text-white">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate}</strong> at <strong className="text-amber-300">{metadata.lastUpdatedTime}</strong> <span className="text-slate-500">({metadata.timezone})</span>
+                      Research Updated: <strong className="text-white">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dayOfWeek}, {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dateString}</strong> at <strong className="text-amber-300">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzOffsetLabel} {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzBadge})</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -221,6 +240,7 @@ export default function App() {
             metadata={metadata}
             catalogType="liveEbay"
             trends={trends}
+            selectedTimezone={selectedTimezone}
           />
         )}
 
@@ -232,6 +252,7 @@ export default function App() {
             metadata={metadata}
             catalogType="curatedBenchmark"
             trends={curatedTrends}
+            selectedTimezone={selectedTimezone}
           />
         )}
 
@@ -239,6 +260,7 @@ export default function App() {
           <MarketTrends
             metadata={metadata}
             trends={trends}
+            selectedTimezone={selectedTimezone}
           />
         )}
       </main>
@@ -258,7 +280,7 @@ export default function App() {
           <div className="flex items-center gap-4 text-slate-400 text-[11px]">
             <span className="flex items-center gap-1 font-mono">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              Research Update: <strong className="text-slate-200">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate} • {metadata.lastUpdatedTime} {metadata.timezone}</strong>
+              Research Update: <strong className="text-slate-200">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).fullString}</strong>
             </span>
             <span>•</span>
             <button
@@ -291,6 +313,7 @@ export default function App() {
         cronInfo={cronInfo}
         onTriggerRefresh={handleTriggerRefresh}
         isRefreshing={isRefreshing}
+        selectedTimezone={selectedTimezone}
       />
     </div>
   );

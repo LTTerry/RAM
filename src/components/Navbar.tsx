@@ -8,9 +8,11 @@ import {
   Calendar,
   Layers,
   Activity,
-  Building2
+  Building2,
+  Globe
 } from 'lucide-react';
 import { ResearchMetadata } from '../data/researchMetadata';
+import { SupportedTimezone, TIMEZONE_OPTIONS, formatToTimezone } from '../utils/timeFormat';
 
 interface NavbarProps {
   activeTab: 'matrix' | 'listings' | 'curated' | 'trends';
@@ -21,6 +23,8 @@ interface NavbarProps {
   onOpenSpecsGuide: () => void;
   onOpenScheduler: () => void;
   metadata: ResearchMetadata;
+  selectedTimezone: SupportedTimezone;
+  onTimezoneChange: (tz: SupportedTimezone) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -32,12 +36,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenSpecsGuide,
   onOpenScheduler,
   metadata,
+  selectedTimezone,
+  onTimezoneChange,
 }) => {
+  // Compute formatted audit time according to user selected timezone
+  // Default base timestamp is the research snapshot: September 3, 2026 19:09:40 HKT (2026-09-03T11:09:40.752Z)
+  const auditFormatted = formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone, { includeDayOfWeek: true });
+
   return (
     <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md text-slate-200 border-b border-slate-800 shadow-md">
       {/* Top Banner / Research Timestamp Ticker */}
       <div className="bg-slate-950 px-4 py-1.5 text-xs text-slate-400 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center flex-wrap gap-2.5">
           <div className="bg-indigo-500/10 border border-indigo-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-indigo-400" />
             <span className="text-[11px] font-bold text-indigo-300 tracking-wider">RESEARCH AUDIT</span>
@@ -46,8 +56,26 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
             <Clock className="w-3.5 h-3.5 text-amber-400" />
             <span>
-              Updated: <strong className="text-white font-semibold">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate}</strong> at <strong className="text-amber-300 font-semibold">{metadata.lastUpdatedTime}</strong> <span className="text-slate-500">({metadata.timezone})</span>
+              Updated: <strong className="text-white font-semibold">{auditFormatted.dayOfWeek}, {auditFormatted.dateString}</strong> at <strong className="text-amber-300 font-semibold">{auditFormatted.timeString}</strong>
             </span>
+          </div>
+
+          {/* Timezone Switcher Dropdown */}
+          <div className="flex items-center gap-1 bg-slate-900 border border-slate-700/80 rounded-md px-2 py-0.5 text-[11px] font-sans">
+            <Globe className="w-3 h-3 text-indigo-400 shrink-0" />
+            <span className="text-slate-400 text-[10px] hidden md:inline">Timezone:</span>
+            <select
+              value={selectedTimezone}
+              onChange={(e) => onTimezoneChange(e.target.value as SupportedTimezone)}
+              className="bg-transparent text-indigo-300 font-semibold text-[11px] focus:outline-none cursor-pointer pr-1"
+              title="Change display timezone across all views and tables"
+            >
+              {TIMEZONE_OPTIONS.map((opt) => (
+                <option key={opt.key} value={opt.key} className="bg-slate-900 text-slate-200">
+                  {opt.badge} ({opt.offsetLabel} - {opt.label})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -55,10 +83,10 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={onOpenScheduler}
             className="hidden sm:flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/30 px-2.5 py-0.5 rounded-full transition-colors font-sans text-[11px] font-medium"
-            title="View Daily 8:00 AM (UTC+8) Cron Schedule & Audit Logs"
+            title="View Daily 8:00 AM HKT (00:00 UTC) Cron Schedule & Audit Logs"
           >
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Daily 8:00 AM (UTC+8) Auto-Refresh (Active)</span>
+            <span>Daily 8:00 AM (UTC+8 HKT) Auto-Refresh</span>
           </button>
 
           <span className="text-slate-400 hidden lg:inline">

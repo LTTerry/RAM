@@ -11,8 +11,10 @@ import {
   AlertCircle, 
   Cpu, 
   Layers,
-  ArrowRight
+  ArrowRight,
+  Globe
 } from 'lucide-react';
+import { SupportedTimezone, formatToTimezone } from '../utils/timeFormat';
 
 interface SchedulerModalProps {
   isOpen: boolean;
@@ -41,6 +43,7 @@ interface SchedulerModalProps {
   } | null;
   onTriggerRefresh: () => Promise<void>;
   isRefreshing: boolean;
+  selectedTimezone?: SupportedTimezone;
 }
 
 export const SchedulerModal: React.FC<SchedulerModalProps> = ({
@@ -49,6 +52,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
   cronInfo,
   onTriggerRefresh,
   isRefreshing,
+  selectedTimezone = 'Asia/Hong_Kong',
 }) => {
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -67,21 +71,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
 
   const formatIso = (isoString?: string | null) => {
     if (!isoString) return 'Pending next scheduled cycle';
-    try {
-      const d = new Date(isoString);
-      return d.toLocaleString('en-US', {
-        timeZone: 'Asia/Hong_Kong',
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      }) + ' HKT';
-    } catch {
-      return isoString;
-    }
+    return formatToTimezone(isoString, selectedTimezone, { includeSeconds: true, shortDate: true }).fullString;
   };
 
   return (
@@ -214,15 +204,7 @@ export const SchedulerModal: React.FC<SchedulerModalProps> = ({
                   <span className="text-slate-300">Last Sync Time:</span>
                   <span className="text-slate-300 text-[10px]">
                     {cronInfo?.lastRun 
-                      ? new Date(cronInfo.lastRun).toLocaleString('en-US', {
-                          timeZone: 'Asia/Hong_Kong',
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit',
-                        }) + ' (UTC+8)'
+                      ? formatIso(cronInfo.lastRun)
                       : 'Recently synced'}
                   </span>
                 </div>

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { RamListing, MemoryGeneration, MarketTrend } from '../types';
 import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
+import { SupportedTimezone, formatToTimezone } from '../utils/timeFormat';
 
 interface ListingsTableProps {
   listings: RamListing[];
@@ -30,6 +31,7 @@ interface ListingsTableProps {
   metadata?: ResearchMetadata;
   catalogType?: 'liveEbay' | 'curatedBenchmark';
   trends?: MarketTrend[];
+  selectedTimezone?: SupportedTimezone;
 }
 
 const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
@@ -111,6 +113,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   metadata = CURRENT_RESEARCH_METADATA,
   catalogType = 'liveEbay',
   trends = [],
+  selectedTimezone = 'Asia/Hong_Kong',
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
@@ -470,7 +473,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
               <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Research: <strong className="text-white">{metadata.lastUpdatedDay}, {metadata.lastUpdatedDate}</strong> • <strong className="text-amber-300">{metadata.lastUpdatedTime}</strong> <span className="text-slate-500">({metadata.timezone})</span></span>
+              <span>Research: <strong className="text-white">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dateString}</strong> • <strong className="text-amber-300">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzOffsetLabel} {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzBadge})</span></span>
             </div>
             <button
               onClick={exportCSV}
