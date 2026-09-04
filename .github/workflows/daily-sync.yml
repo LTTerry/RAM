@@ -51,7 +51,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add public/market-data.json
+          git add public/curated-data.json public/ebay-data.json
           git add -f public/ebay-sync.log
           git diff --quiet && git diff --staged --quiet || (git commit -m "Automated market data sync [skip ci]" && git push)
 
