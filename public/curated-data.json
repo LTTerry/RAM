@@ -4,9 +4,9 @@
   "metadata": {
     "lastUpdatedDate": "September 4, 2026",
     "lastUpdatedDay": "Friday",
-    "lastUpdatedTime": "11:28 AM",
+    "lastUpdatedTime": "12:12 PM",
     "timezone": "UTC+8 (Hong Kong Time)",
-    "formattedFullTimestamp": "Friday, September 4, 2026 at 11:28 AM (UTC+8)",
+    "formattedFullTimestamp": "Friday, September 4, 2026 at 12:12 PM (UTC+8)",
     "researchQuarter": "Q3 2026",
     "totalSkusAudited": 36,
     "marketScope": "ServerSupply, Compu Devices, DirectMacro, Newegg Business, Staar Micro"
@@ -34,7 +34,7 @@
       "warranty": "Manufacturer Warranty",
       "sourceUrl": "https://www.newegg.com/p/1B4-000W-008K3",
       "sourceDomain": "newegg.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from Newegg Enterprise.",
       "stockStatus": "In Stock"
     },
@@ -60,7 +60,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR5%20SDRAM/128GB/SAMSUNG/M321RAGA0B20-CWK_362276.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live catalog listing from ServerSupply (New price $7,500, Refurbished $6,000).",
       "stockStatus": "In Stock"
     },
@@ -86,7 +86,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR5%20SDRAM/96GB/SAMSUNG/M321RYGA0PB0-CWM.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live catalog listing from ServerSupply.",
       "stockStatus": "In Stock"
     },
@@ -112,7 +112,7 @@
       "warranty": "1-Year Warranty",
       "sourceUrl": "https://www.directmacro.com/m321ryga0pb0-cwm-samsung-96gb-ddr5-5600mhz-ecc-rdimm.html",
       "sourceDomain": "directmacro.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified distributor listing from DirectMacro.",
       "stockStatus": "In Stock"
     },
@@ -138,7 +138,7 @@
       "warranty": "Manufacturer Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR5%20SDRAM/64GB/SAMSUNG/M321R8GA0PB0-CWM.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live catalog listing from ServerSupply.",
       "stockStatus": "In Stock"
     },
@@ -164,7 +164,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR5%20SDRAM/64GB/SAMSUNG/M321R8GA0BB0-CQK.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply (New price $4,500, Refurbished $3,000).",
       "stockStatus": "In Stock"
     },
@@ -190,7 +190,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR5%20SDRAM/64GB/MICRON/MTC40F2046S1RC48BA1.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply.",
       "stockStatus": "In Stock"
     },
@@ -216,7 +216,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR5%20SDRAM/32GB/SAMSUNG/M321R4GA3BB0-CQK.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply.",
       "stockStatus": "In Stock"
     },
@@ -242,7 +242,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR4%20SDRAM/64GB/SAMSUNG/M393A8G40AB2-CWE.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply (New price $1,100, Refurbished $800).",
       "stockStatus": "In Stock"
     },
@@ -268,7 +268,7 @@
       "warranty": "1-Year Warranty",
       "sourceUrl": "https://www.compudevices.com/m393a8k40b22-cwd-samsung-64gb-ddr4-2666.html",
       "sourceDomain": "compudevices.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live distributor listing from Compu Devices.",
       "stockStatus": "In Stock"
     },
@@ -294,7 +294,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR4%20SDRAM/32GB/SAMSUNG/M393A4G43AB3-CWE.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply.",
       "stockStatus": "In Stock"
     },
@@ -320,7 +320,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR4%20SDRAM/32GB/SAMSUNG/M393A4K40BB2-CTD.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply (New price $620, Refurbished $325).",
       "stockStatus": "In Stock"
     },
@@ -346,7 +346,7 @@
       "warranty": "1-Year Warranty",
       "sourceUrl": "https://www.directmacro.com/mta36asf4g72pz-3g2j-micron-32gb-ddr4-2400mhz-ecc.html",
       "sourceDomain": "directmacro.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified distributor listing from DirectMacro.",
       "stockStatus": "In Stock"
     },
@@ -372,7 +372,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR4%20SDRAM/16GB/SAMSUNG/M393A2K43BB1-CTD.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply (New price $255, Refurbished $230).",
       "stockStatus": "In Stock"
     },
@@ -398,7 +398,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR4%20SDRAM/16GB/SAMSUNG/M393A2G40DB0-CPB.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply.",
       "stockStatus": "In Stock"
     },
@@ -424,7 +424,7 @@
       "warranty": "1-Year Warranty",
       "sourceUrl": "https://www.compudevices.com/m393a1g43db0-cpb-samsung-8gb-ddr4-2133.html",
       "sourceDomain": "compudevices.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from Compu Devices.",
       "stockStatus": "In Stock"
     },
@@ -450,7 +450,7 @@
       "warranty": "30-Day Warranty",
       "sourceUrl": "https://www.newegg.com/p/1X7-004H-000A8",
       "sourceDomain": "newegg.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live distributor listing from Newegg.",
       "stockStatus": "In Stock"
     },
@@ -476,7 +476,7 @@
       "warranty": "30-Day Warranty",
       "sourceUrl": "https://www.starmicroinc.net/samsung-16gb-pc3-14900r-m393b2g70qh0-cma/",
       "sourceDomain": "starmicroinc.net",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from Staar Micro Inc.",
       "stockStatus": "In Stock"
     },
@@ -502,7 +502,7 @@
       "warranty": "90-Day ServerSupply Warranty",
       "sourceUrl": "https://www.serversupply.com/MEMORY/DDR3%20SDRAM/8GB/SAMSUNG/M393B1K70DH0-CK0.htm",
       "sourceDomain": "serversupply.com",
-      "scrapedAt": "2026-09-04T03:29:31.036Z",
+      "scrapedAt": "2026-09-04T04:12:42.979Z",
       "notes": "Verified live listing from ServerSupply.",
       "stockStatus": "In Stock"
     }
@@ -829,6 +829,165 @@
     {
       "date": "2026-09-04",
       "timestamp": 1788492571036,
+      "totalListings": 19,
+      "listingsSummary": [
+        {
+          "id": "dist-ddr5-256-4800-ss1",
+          "generation": "DDR5",
+          "capacityGB": 256,
+          "speedMTs": 4800,
+          "vendor": "Newegg Business",
+          "pricePerUnit": 7979.99
+        },
+        {
+          "id": "dist-ddr5-128-4800-ss1",
+          "generation": "DDR5",
+          "capacityGB": 128,
+          "speedMTs": 4800,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 6000
+        },
+        {
+          "id": "dist-ddr5-96-5600-ss1",
+          "generation": "DDR5",
+          "capacityGB": 96,
+          "speedMTs": 5600,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 3200
+        },
+        {
+          "id": "dist-ddr5-96-5600-dm1",
+          "generation": "DDR5",
+          "capacityGB": 96,
+          "speedMTs": 5600,
+          "vendor": "DirectMacro",
+          "pricePerUnit": 3317
+        },
+        {
+          "id": "dist-ddr5-64-5600-ss1",
+          "generation": "DDR5",
+          "capacityGB": 64,
+          "speedMTs": 5600,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 3850
+        },
+        {
+          "id": "dist-ddr5-64-4800-ss1",
+          "generation": "DDR5",
+          "capacityGB": 64,
+          "speedMTs": 4800,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 3000
+        },
+        {
+          "id": "dist-ddr5-64-4800-mic1",
+          "generation": "DDR5",
+          "capacityGB": 64,
+          "speedMTs": 4800,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 3000
+        },
+        {
+          "id": "dist-ddr5-32-4800-ss1",
+          "generation": "DDR5",
+          "capacityGB": 32,
+          "speedMTs": 4800,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 1400
+        },
+        {
+          "id": "dist-ddr4-64-3200-ss1",
+          "generation": "DDR4",
+          "capacityGB": 64,
+          "speedMTs": 3200,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 800
+        },
+        {
+          "id": "dist-ddr4-64-2666-cd1",
+          "generation": "DDR4",
+          "capacityGB": 64,
+          "speedMTs": 2666,
+          "vendor": "Compu Devices",
+          "pricePerUnit": 1085.79
+        },
+        {
+          "id": "dist-ddr4-32-3200-ss1",
+          "generation": "DDR4",
+          "capacityGB": 32,
+          "speedMTs": 3200,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 390
+        },
+        {
+          "id": "dist-ddr4-32-2666-ss1",
+          "generation": "DDR4",
+          "capacityGB": 32,
+          "speedMTs": 2666,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 325
+        },
+        {
+          "id": "dist-ddr4-32-2400-dm1",
+          "generation": "DDR4",
+          "capacityGB": 32,
+          "speedMTs": 2400,
+          "vendor": "DirectMacro",
+          "pricePerUnit": 470
+        },
+        {
+          "id": "dist-ddr4-16-2666-ss1",
+          "generation": "DDR4",
+          "capacityGB": 16,
+          "speedMTs": 2666,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 230
+        },
+        {
+          "id": "dist-ddr4-16-2133-ss1",
+          "generation": "DDR4",
+          "capacityGB": 16,
+          "speedMTs": 2133,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 160
+        },
+        {
+          "id": "dist-ddr4-8-2133-cd1",
+          "generation": "DDR4",
+          "capacityGB": 8,
+          "speedMTs": 2133,
+          "vendor": "Compu Devices",
+          "pricePerUnit": 147.86
+        },
+        {
+          "id": "dist-ddr3-32-1333-ne1",
+          "generation": "DDR3",
+          "capacityGB": 32,
+          "speedMTs": 1333,
+          "vendor": "Newegg",
+          "pricePerUnit": 89
+        },
+        {
+          "id": "dist-ddr3-16-1866-sm1",
+          "generation": "DDR3",
+          "capacityGB": 16,
+          "speedMTs": 1866,
+          "vendor": "Staar Micro Inc",
+          "pricePerUnit": 111
+        },
+        {
+          "id": "dist-ddr3-8-1600-ss1",
+          "generation": "DDR3",
+          "capacityGB": 8,
+          "speedMTs": 1600,
+          "vendor": "ServerSupply",
+          "pricePerUnit": 120
+        }
+      ]
+    },
+    {
+      "date": "2026-09-04",
+      "timestamp": 1788495162979,
       "totalListings": 19,
       "listingsSummary": [
         {
