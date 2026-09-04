@@ -42,6 +42,27 @@ export default function App() {
     } catch {}
   };
 
+  // Calculate the most up-to-date timestamp across all sources (cronInfo, metadata, live listings)
+  const latestTimestamp = React.useMemo(() => {
+    const candidates: string[] = [];
+    if (cronInfo?.lastRun) candidates.push(cronInfo.lastRun);
+    if (cronInfo?.recentLogs?.[0]?.timestamp) candidates.push(cronInfo.recentLogs[0].timestamp);
+    if (metadata?.isoTimestamp) candidates.push(metadata.isoTimestamp);
+    if (liveEbayListings?.[0]?.scrapedAt) candidates.push(liveEbayListings[0].scrapedAt);
+    if (curatedListings?.[0]?.scrapedAt) candidates.push(curatedListings[0].scrapedAt);
+
+    let maxTime = 0;
+    let bestIso = metadata?.isoTimestamp || "2026-09-04T02:57:22.498Z";
+    for (const c of candidates) {
+      const t = new Date(c).getTime();
+      if (!isNaN(t) && t > maxTime) {
+        maxTime = t;
+        bestIso = c;
+      }
+    }
+    return bestIso;
+  }, [cronInfo, metadata, liveEbayListings, curatedListings]);
+
   // Fetch static market data from GitHub Pages host on load
   const fetchMarketData = async () => {
     try {
@@ -70,7 +91,7 @@ export default function App() {
             setCuratedTrends([]);
           }
           if (curatedData.metadata) {
-            setMetadata(curatedData.metadata);
+            setMetadata(prev => ({ ...prev, ...curatedData.metadata }));
           }
         }
       }
@@ -88,6 +109,9 @@ export default function App() {
           }
           if (ebayData.cronInfo) {
             setCronInfo(ebayData.cronInfo);
+          }
+          if (ebayData.metadata) {
+            setMetadata(prev => ({ ...prev, ...ebayData.metadata }));
           }
         }
       }
@@ -135,6 +159,7 @@ export default function App() {
         metadata={metadata}
         selectedTimezone={selectedTimezone}
         onTimezoneChange={handleTimezoneChange}
+        lastUpdatedTimestamp={latestTimestamp}
       />
 
       {/* Main Content Area */}
@@ -171,7 +196,7 @@ export default function App() {
                   <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px] bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
                     <Clock className="w-4 h-4 text-amber-400 shrink-0" />
                     <span>
-                      Research Updated: <strong className="text-white">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dayOfWeek}, {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dateString}</strong> at <strong className="text-amber-300">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzOffsetLabel} {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzBadge})</span>
+                      Research Updated: <strong className="text-white">{formatToTimezone(latestTimestamp, selectedTimezone).dayOfWeek}, {formatToTimezone(latestTimestamp, selectedTimezone).dateString}</strong> at <strong className="text-amber-300">{formatToTimezone(latestTimestamp, selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(latestTimestamp, selectedTimezone).tzOffsetLabel} {formatToTimezone(latestTimestamp, selectedTimezone).tzBadge})</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -241,6 +266,7 @@ export default function App() {
             catalogType="liveEbay"
             trends={trends}
             selectedTimezone={selectedTimezone}
+            lastUpdatedTimestamp={latestTimestamp}
           />
         )}
 
@@ -253,6 +279,7 @@ export default function App() {
             catalogType="curatedBenchmark"
             trends={curatedTrends}
             selectedTimezone={selectedTimezone}
+            lastUpdatedTimestamp={latestTimestamp}
           />
         )}
 
@@ -261,6 +288,7 @@ export default function App() {
             metadata={metadata}
             trends={trends}
             selectedTimezone={selectedTimezone}
+            lastUpdatedTimestamp={latestTimestamp}
           />
         )}
       </main>
@@ -280,7 +308,7 @@ export default function App() {
           <div className="flex items-center gap-4 text-slate-400 text-[11px]">
             <span className="flex items-center gap-1 font-mono">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              Research Update: <strong className="text-slate-200">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).fullString}</strong>
+              Research Update: <strong className="text-slate-200">{formatToTimezone(latestTimestamp, selectedTimezone).fullString}</strong>
             </span>
             <span>•</span>
             <button

@@ -25,6 +25,7 @@ interface NavbarProps {
   metadata: ResearchMetadata;
   selectedTimezone: SupportedTimezone;
   onTimezoneChange: (tz: SupportedTimezone) => void;
+  lastUpdatedTimestamp?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -38,10 +39,11 @@ export const Navbar: React.FC<NavbarProps> = ({
   metadata,
   selectedTimezone,
   onTimezoneChange,
+  lastUpdatedTimestamp,
 }) => {
-  // Compute formatted audit time according to user selected timezone
-  // Default base timestamp is the research snapshot: September 3, 2026 19:09:40 HKT (2026-09-03T11:09:40.752Z)
-  const auditFormatted = formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone, { includeDayOfWeek: true });
+  // Compute formatted audit time according to user selected timezone and live dataset timestamp
+  const effectiveTimestamp = lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z";
+  const auditFormatted = formatToTimezone(effectiveTimestamp, selectedTimezone, { includeDayOfWeek: true });
 
   return (
     <header className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md text-slate-200 border-b border-slate-800 shadow-md">
@@ -182,6 +184,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveTab('trends')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
+              activeTab === 'trends'
+                ? 'bg-indigo-600 text-white border border-indigo-400/40 shadow-xs'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            }`}
+          >
+            <TrendingDown className="w-3.5 h-3.5" />
+            3-Month Market Trends
+          </button>
+
+          <button
             onClick={() => setActiveTab('curated')}
             className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
               activeTab === 'curated'
@@ -196,18 +210,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}>
               {totalCuratedCount || 72}
             </span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('trends')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors ${
-              activeTab === 'trends'
-                ? 'bg-indigo-600 text-white border border-indigo-400/40 shadow-xs'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
-            }`}
-          >
-            <TrendingDown className="w-3.5 h-3.5" />
-            3-Month Market Trends
           </button>
         </nav>
       </div>

@@ -32,6 +32,7 @@ interface ListingsTableProps {
   catalogType?: 'liveEbay' | 'curatedBenchmark';
   trends?: MarketTrend[];
   selectedTimezone?: SupportedTimezone;
+  lastUpdatedTimestamp?: string;
 }
 
 const TrendSparkline = ({ trend }: { trend: MarketTrend }) => {
@@ -114,6 +115,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   catalogType = 'liveEbay',
   trends = [],
   selectedTimezone = 'Asia/Hong_Kong',
+  lastUpdatedTimestamp,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
@@ -473,7 +475,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
               <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Research: <strong className="text-white">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dateString}</strong> • <strong className="text-amber-300">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzOffsetLabel} {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzBadge})</span></span>
+              <span>Research: <strong className="text-white">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).dateString}</strong> • <strong className="text-amber-300">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzOffsetLabel} {formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzBadge})</span></span>
             </div>
             <button
               onClick={exportCSV}

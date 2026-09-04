@@ -28,12 +28,14 @@ interface MarketTrendsProps {
   metadata?: ResearchMetadata;
   trends?: MarketTrend[];
   selectedTimezone?: SupportedTimezone;
+  lastUpdatedTimestamp?: string;
 }
 
 export const MarketTrends: React.FC<MarketTrendsProps> = ({
   metadata = CURRENT_RESEARCH_METADATA,
   trends = MARKET_TRENDS_DATA,
   selectedTimezone = 'Asia/Hong_Kong',
+  lastUpdatedTimestamp,
 }) => {
   const [selectedGen, setSelectedGen] = useState<'ALL' | 'DDR3' | 'DDR4' | 'DDR5' | 'DDR5_MONO' | 'DDR5_3DS'>('ALL');
   const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
@@ -62,7 +64,7 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
               </span>
               <span className="bg-slate-950 text-slate-300 border border-slate-800 px-3 py-0.5 rounded-full text-xs flex items-center gap-1.5 font-mono">
                 <Clock className="w-3.5 h-3.5 text-amber-400" />
-                Research Update: <strong className="text-white font-semibold">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).dateString}</strong> at <strong className="text-amber-300 font-semibold">{formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzOffsetLabel} {formatToTimezone("2026-09-03T11:09:40.752Z", selectedTimezone).tzBadge})</span>
+                Research Update: <strong className="text-white font-semibold">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).dateString}</strong> at <strong className="text-amber-300 font-semibold">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzOffsetLabel} {formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzBadge})</span>
               </span>
             </div>
             <div>
