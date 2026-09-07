@@ -23,6 +23,7 @@ import {
 import { RamListing, MemoryGeneration, MarketTrend } from '../types';
 import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
 import { SupportedTimezone, formatToTimezone } from '../utils/timeFormat';
+import { detectModuleType, extractMemoryRank } from '../utils/memoryClassification';
 
 interface ListingsTableProps {
   listings: RamListing[];
@@ -118,7 +119,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   lastUpdatedTimestamp,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
   const [selectedCapacity, setSelectedCapacity] = useState<string>('ALL');
   const [selectedSpeed, setSelectedSpeed] = useState<string>('ALL');
   const [onlyBulkLots, setOnlyBulkLots] = useState(false);
@@ -126,11 +126,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   const [sortField, setSortField] = useState<'pricePerUnit' | 'pricePerGB' | 'speedMTs' | 'capacityGB'>('pricePerUnit');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  // Extract unique vendors
-  const allVendors = useMemo(() => {
-    return Array.from(new Set(listings.map(l => l.vendor))).sort();
-  }, [listings]);
 
   // Compute SKU-level lowest and highest prices across the entire catalog
   const skuPriceBounds = useMemo(() => {
@@ -151,21 +146,20 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   // Filter & sort logic
   const filteredListings = useMemo(() => {
     return listings.filter(item => {
+      const detectedModType = detectModuleType(item.title, item.capacityGB, item.generation, item.moduleType);
+      const detectedRank = extractMemoryRank(item.title, item.capacityGB, item.generation, item.rank);
+
       // Generation filter
       if (selectedGeneration !== 'ALL') {
         if (selectedGeneration === 'DDR5_MONO') {
-          if (item.generation !== 'DDR5' || item.moduleType === '3DS RDIMM') return false;
+          if (item.generation !== 'DDR5' || detectedModType === '3DS RDIMM') return false;
         } else if (selectedGeneration === 'DDR5_3DS') {
-          if (item.generation !== 'DDR5' || item.moduleType !== '3DS RDIMM') return false;
+          if (item.generation !== 'DDR5' || detectedModType !== '3DS RDIMM') return false;
         } else if (item.generation !== selectedGeneration) {
           return false;
         }
       }
       
-      // Vendor filter
-      if (selectedVendor !== 'ALL' && item.vendor !== selectedVendor) {
-        return false;
-      }
       // Capacity filter
       if (selectedCapacity !== 'ALL' && item.capacityGB !== Number(selectedCapacity)) {
         return false;
@@ -194,9 +188,11 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         const matchTitle = item.title.toLowerCase().includes(query);
         const matchPN = item.partNumber?.toLowerCase().includes(query) || false;
         const matchVendor = item.vendor.toLowerCase().includes(query);
+        const matchModuleType = detectedModType.toLowerCase().includes(query);
+        const matchRank = detectedRank.toLowerCase().includes(query);
         const matchNotes = item.notes?.toLowerCase().includes(query) || false;
         const matchStandard = item.speedStandard?.toLowerCase().includes(query) || false;
-        if (!matchTitle && !matchPN && !matchVendor && !matchNotes && !matchStandard) {
+        if (!matchTitle && !matchPN && !matchVendor && !matchModuleType && !matchRank && !matchNotes && !matchStandard) {
           return false;
         }
       }
@@ -214,7 +210,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         return aVal < bVal ? 1 : -1;
       }
     });
-  }, [listings, selectedGeneration, selectedVendor, selectedCapacity, selectedSpeed, onlyBulkLots, priceTierFilter, searchTerm, sortField, sortDirection, skuPriceBounds]);
+  }, [listings, selectedGeneration, selectedCapacity, selectedSpeed, onlyBulkLots, priceTierFilter, searchTerm, sortField, sortDirection, skuPriceBounds]);
 
   // Overall statistics for current filtered view
   const currentViewStats = useMemo(() => {
@@ -539,21 +535,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                 <option value="DDR5_3DS">DDR5 3DS</option>
               </select>
             </div>
-
-            {/* Vendor */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-medium text-[11px]">Vendor:</span>
-              <select
-                value={selectedVendor}
-                onChange={(e) => setSelectedVendor(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-slate-200 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                <option value="ALL">All Vendors</option>
-                {allVendors.map(v => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {/* Bulk Lot Checkbox */}
@@ -594,8 +575,9 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
+                <th className="py-3 px-3 whitespace-nowrap">Module Type</th>
+                <th className="py-3 px-3 whitespace-nowrap">Rank</th>
                 <th className="py-3 px-3 whitespace-nowrap">Part Number / Model</th>
-                <th className="py-3 px-3 whitespace-nowrap">Vendor / Channel</th>
                 <th className="py-3 px-3 whitespace-nowrap">Lot Qty</th>
                 <th 
                   onClick={() => handleSort('pricePerUnit')}
@@ -631,12 +613,14 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
             <tbody className="divide-y divide-slate-800/60">
               {filteredListings.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="py-8 text-center text-slate-500">
+                  <td colSpan={12} className="py-8 text-center text-slate-500">
                     No memory listings match your selected filter criteria.
                   </td>
                 </tr>
               ) : (
                 filteredListings.map((item) => {
+                  const effectiveModType = detectModuleType(item.title, item.capacityGB, item.generation, item.moduleType);
+                  const effectiveRank = extractMemoryRank(item.title, item.capacityGB, item.generation, item.rank);
                   const pricePerGB = item.pricePerUnit / item.capacityGB;
                   const skuKey = `${item.generation}-${item.capacityGB}-${item.speedMTs}`;
                   const bounds = skuPriceBounds.get(skuKey);
@@ -654,7 +638,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                           'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         }`}>
                           {item.generation === 'DDR5' 
-                            ? (item.moduleType === '3DS RDIMM' ? 'DDR5 (3DS)' : 'DDR5 (Mono)') 
+                            ? (effectiveModType === '3DS RDIMM' ? 'DDR5 (3DS)' : 'DDR5 (Mono)') 
                             : item.generation}
                         </span>
                       </td>
@@ -667,7 +651,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                             Non-Bin
                           </span>
                         )}
-                        {item.moduleType === '3DS RDIMM' && (
+                        {effectiveModType === '3DS RDIMM' && (
                           <span className="ml-1 text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1 py-0.2 rounded font-sans">
                             3DS
                           </span>
@@ -680,8 +664,28 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                           {item.speedMTs} MT/s
                         </div>
                         <div className="text-[10px] text-slate-500">
-                          {item.speedStandard} • {item.rank}
+                          {item.speedStandard}
                         </div>
+                      </td>
+
+                      {/* Module Type */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className={`inline-block px-2 py-0.5 rounded font-mono text-[11px] font-semibold ${
+                          effectiveModType === '3DS RDIMM' 
+                            ? 'bg-rose-500/10 text-rose-300 border border-rose-500/20' 
+                            : effectiveModType === 'LRDIMM'
+                            ? 'bg-purple-500/10 text-purple-300 border border-purple-500/20'
+                            : 'bg-slate-800/80 text-slate-200 border border-slate-700/60'
+                        }`}>
+                          {effectiveModType}
+                        </span>
+                      </td>
+
+                      {/* Rank */}
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="font-mono text-slate-300 text-xs font-semibold bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
+                          {effectiveRank}
+                        </span>
                       </td>
 
                       {/* Part Number */}
@@ -708,16 +712,6 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         )}
                         <div className="text-[11px] text-slate-400 truncate max-w-[220px]" title={item.title}>
                           {item.title}
-                        </div>
-                      </td>
-
-                      {/* Vendor */}
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <div className="font-semibold text-slate-200">
-                          {item.vendor}
-                        </div>
-                        <div className="text-[10px] text-slate-500">
-                          {item.vendorType}
                         </div>
                       </td>
 

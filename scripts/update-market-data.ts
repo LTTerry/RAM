@@ -269,8 +269,50 @@ function detectBrand(title: string): 'Samsung' | 'SK Hynix' | 'Micron' | 'Kingst
 }
 
 function extractPartNumber(title: string): string {
-  const match = title.match(/\b(M393[A-Z0-9]+|M386[A-Z0-9]+|M392[A-Z0-9]+|HMA[A-Z0-9]+|HMT[A-Z0-9]+|MTA[A-Z0-9]+|MT36[A-Z0-9]+|KSM[A-Z0-9]+|KVR[A-Z0-9]+)\b/i);
+  const match = title.match(/\b(M393[A-Z0-9]+|M386[A-Z0-9]+|M321[A-Z0-9]+|M392[A-Z0-9]+|HMA[A-Z0-9]+|HMT[A-Z0-9]+|HMCT[A-Z0-9]+|MTA[A-Z0-9]+|MTC[A-Z0-9]+|MT36[A-Z0-9]+|KSM[A-Z0-9]+|KVR[A-Z0-9]+)\b/i);
   return match ? match[1].toUpperCase() : '';
+}
+
+function detectModuleType(title: string, capacityGB: number, generation: string): string {
+  const t = (title || '').toLowerCase();
+  if (/\b(?:3ds|tsv|3d[- ]stack|3ds[- ]rdimm)\b/i.test(t)) return '3DS RDIMM';
+  
+  const isExplicitLRDIMM = 
+    /\b(?:lrdimm|lr-dimm|load[- ]reduced|loadreduced)\b/i.test(t) ||
+    /\bpc[345][l]?-\d+[a-z]?l\b/i.test(t) ||
+    /\bm386[a-z0-9]+/i.test(t) ||
+    /\bmta[0-9]+asq[0-9]+g72l[sz]/i.test(t) ||
+    /\bhma[a-z0-9]+l[a-z0-9]+/i.test(t);
+
+  const isNegatedLRDIMM = /\b(?:not|non|no)\s+lrdimm\b/i.test(t);
+
+  if (isExplicitLRDIMM && !isNegatedLRDIMM) return 'LRDIMM';
+
+  if (generation === 'DDR5') {
+    if (capacityGB >= 256) return '3DS RDIMM';
+    if (capacityGB === 128 && (/\b(?:3ds|tsv|8rx4|4rx4)\b/i.test(t) && !/\b(?:2s2rx4|2rx4|m321|hmct04ag)\b/i.test(t))) {
+      return '3DS RDIMM';
+    }
+    return 'RDIMM';
+  }
+
+  if (generation === 'DDR4') {
+    if (/\b(?:rdimm|ecc\s+reg|registered|pc4-\d+[a-z]?r|m393[a-z0-9]+)\b/i.test(t) && !isExplicitLRDIMM) {
+      return 'RDIMM';
+    }
+    if (capacityGB >= 128 && (/\b(?:4rx4|8rx4|octal|quad\s+rank)\b/i.test(t) || !t.includes('rdimm'))) {
+      if (/\bm393/i.test(t)) return 'RDIMM';
+      return 'LRDIMM';
+    }
+    return 'RDIMM';
+  }
+
+  if (generation === 'DDR3') {
+    if (isExplicitLRDIMM) return 'LRDIMM';
+    return 'RDIMM';
+  }
+
+  return 'RDIMM';
 }
 
 // Search eBay Prices with strict per-unit normalization
@@ -333,7 +375,7 @@ async function searchEbayPrices(token: string, trend: any) {
         capacityGB: normalized.capacityGB,
         speedMTs: trend.speedMTs,
         speedStandard: buildSpeedStandard(trend.generation, trend.speedMTs),
-        moduleType: (normalized.capacityGB >= 128 && trend.generation === 'DDR4') ? 'LRDIMM' : (trend.generation === 'DDR5' && normalized.capacityGB >= 128) ? '3DS RDIMM' : 'RDIMM',
+        moduleType: detectModuleType(title, normalized.capacityGB, trend.generation),
         rank: extractMemoryRank(title, normalized.capacityGB, trend.generation),
         voltage: trend.generation === 'DDR5' ? '1.1V' : trend.generation === 'DDR4' ? '1.2V' : '1.5V',
         vendor: `eBay (${sellerName})`,

@@ -11,12 +11,19 @@ import { CURRENT_RESEARCH_METADATA, DEFAULT_CRON_INFO, ResearchMetadata } from '
 import { MARKET_TRENDS_DATA } from './data/marketTrendsData';
 import { RamListing, MemoryGeneration, MarketTrend } from './types';
 import { SupportedTimezone, formatToTimezone } from './utils/timeFormat';
+import { detectModuleType, extractMemoryRank } from './utils/memoryClassification';
 import { Server, ArrowRight, Clock, Calendar, CheckCircle2, RefreshCw, Activity, Zap } from 'lucide-react';
+
+const normalizeListing = (l: RamListing): RamListing => ({
+  ...l,
+  moduleType: detectModuleType(l.title, l.capacityGB, l.generation, l.moduleType),
+  rank: extractMemoryRank(l.title, l.capacityGB, l.generation, l.rank)
+});
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'matrix' | 'listings' | 'curated' | 'trends'>('matrix');
-  const [liveEbayListings, setLiveEbayListings] = useState<RamListing[]>(INITIAL_EBAY_LISTINGS);
-  const [curatedListings, setCuratedListings] = useState<RamListing[]>(INITIAL_CURATED_LISTINGS);
+  const [liveEbayListings, setLiveEbayListings] = useState<RamListing[]>(() => INITIAL_EBAY_LISTINGS.map(normalizeListing));
+  const [curatedListings, setCuratedListings] = useState<RamListing[]>(() => INITIAL_CURATED_LISTINGS.map(normalizeListing));
   const [metadata, setMetadata] = useState<ResearchMetadata>(CURRENT_RESEARCH_METADATA);
   const [trends, setTrends] = useState<MarketTrend[]>(MARKET_TRENDS_DATA);
   const [curatedTrends, setCuratedTrends] = useState<MarketTrend[]>([]);
@@ -81,9 +88,9 @@ export default function App() {
         const curatedData = await curatedRes.json();
         if (curatedData.success) {
           if (Array.isArray(curatedData.curatedListings) && curatedData.curatedListings.length > 0) {
-            setCuratedListings(curatedData.curatedListings);
+            setCuratedListings(curatedData.curatedListings.map(normalizeListing));
           } else {
-            setCuratedListings(INITIAL_CURATED_LISTINGS);
+            setCuratedListings(INITIAL_CURATED_LISTINGS.map(normalizeListing));
           }
           if (Array.isArray(curatedData.trends) && curatedData.trends.length > 0) {
             setCuratedTrends(curatedData.trends);
@@ -100,9 +107,9 @@ export default function App() {
         const ebayData = await ebayRes.json();
         if (ebayData.success) {
           if (Array.isArray(ebayData.ebayListings) && ebayData.ebayListings.length > 0) {
-            setLiveEbayListings(ebayData.ebayListings);
+            setLiveEbayListings(ebayData.ebayListings.map(normalizeListing));
           } else if (Array.isArray(ebayData.listings) && ebayData.listings.length > 0) {
-            setLiveEbayListings(ebayData.listings);
+            setLiveEbayListings(ebayData.listings.map(normalizeListing));
           }
           if (Array.isArray(ebayData.trends) && ebayData.trends.length > 0) {
             setTrends(ebayData.trends);
