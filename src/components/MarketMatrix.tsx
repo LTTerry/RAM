@@ -25,7 +25,7 @@ interface MarketMatrixProps {
 
 export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, onSelectSpec }) => {
   const [activeGenTab, setActiveGenTab] = useState<'DDR3' | 'DDR4' | 'DDR5_MONO' | 'DDR5_3DS'>('DDR4');
-  const [displayMode, setDisplayMode] = useState<'retailBuyItNow' | 'range' | 'lowest' | 'highest'>('retailBuyItNow');
+  const [displayMode, setDisplayMode] = useState<'range' | 'lowest' | 'highest' | 'retailBuyItNow'>('range');
   const [showPricingGuide, setShowPricingGuide] = useState(true);
 
   // Configuration for matrix axes per generation
@@ -266,24 +266,14 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
             </span>
             <div className="flex flex-wrap items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs gap-1">
               <button
-                onClick={() => setDisplayMode('retailBuyItNow')}
+                onClick={() => setDisplayMode('range')}
                 className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
-                  displayMode === 'retailBuyItNow'
+                  displayMode === 'range'
                     ? 'bg-indigo-600 text-white shadow-xs'
                     : 'text-indigo-400 hover:text-white hover:bg-slate-900'
                 }`}
               >
-                <ShoppingCart className="w-3 h-3" />
-                🛒 Exact 1x Buy-It-Now
-              </button>
-              <button
-                onClick={() => setDisplayMode('range')}
-                className={`px-2.5 py-1 font-semibold rounded transition-all ${
-                  displayMode === 'range'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
+                <TrendingUp className="w-3 h-3" />
                 📊 Exact eBay Range (Low to High)
               </button>
               <button
@@ -307,6 +297,17 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
               >
                 <ShieldCheck className="w-3 h-3" />
                 🟣 Exact Highest eBay Listing
+              </button>
+              <button
+                onClick={() => setDisplayMode('retailBuyItNow')}
+                className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
+                  displayMode === 'retailBuyItNow'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-indigo-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <ShoppingCart className="w-3 h-3" />
+                🛒 Exact 1x Buy-It-Now
               </button>
             </div>
           </div>

@@ -162,7 +162,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            Market Matrix Grid
+            eBay Market Matrix Grid
           </button>
 
           <button
@@ -174,7 +174,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Cpu className="w-3.5 h-3.5" />
-            All Asking Prices & Vendors
+            eBay All Asking Prices & Vendors
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono flex items-center gap-1 ${
               activeTab === 'listings' ? 'bg-indigo-700/80 text-white' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
             }`}>
@@ -192,7 +192,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <TrendingDown className="w-3.5 h-3.5" />
-            3-Month Market Trends
+            eBay 3-Month Market Trends
           </button>
 
           <button
@@ -204,7 +204,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             <Building2 className="w-3.5 h-3.5" />
-            Curated Benchmark Catalog
+            Curated Benchmark Catalog of ITAD Enterprise
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
               activeTab === 'curated' ? 'bg-indigo-700/80 text-white' : 'bg-slate-800 text-slate-300'
             }`}>
