@@ -121,11 +121,23 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCapacity, setSelectedCapacity] = useState<string>('ALL');
   const [selectedSpeed, setSelectedSpeed] = useState<string>('ALL');
+  const [selectedVendor, setSelectedVendor] = useState<string>('ALL');
   const [onlyBulkLots, setOnlyBulkLots] = useState(false);
   const [priceTierFilter, setPriceTierFilter] = useState<'ALL' | 'LOWEST_ONLY' | 'HIGHEST_ONLY'>('ALL');
-  const [sortField, setSortField] = useState<'pricePerUnit' | 'pricePerGB' | 'speedMTs' | 'capacityGB'>('pricePerUnit');
+  const [sortField, setSortField] = useState<'pricePerUnit' | 'pricePerGB' | 'speedMTs' | 'capacityGB' | 'vendor'>('pricePerUnit');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Compute unique vendors in the dataset
+  const vendorOptions = useMemo(() => {
+    const set = new Set<string>();
+    listings.forEach(l => {
+      if (l.vendor && l.vendor.trim() !== '') {
+        set.add(l.vendor.trim());
+      }
+    });
+    return Array.from(set).sort();
+  }, [listings]);
 
   // Compute SKU-level lowest and highest prices across the entire catalog
   const skuPriceBounds = useMemo(() => {
@@ -168,6 +180,10 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
       if (selectedSpeed !== 'ALL' && item.speedMTs !== Number(selectedSpeed)) {
         return false;
       }
+      // Vendor filter
+      if (selectedVendor !== 'ALL' && item.vendor !== selectedVendor) {
+        return false;
+      }
       // Bulk lot filter
       if (onlyBulkLots && item.lotQuantity <= 1) {
         return false;
@@ -198,6 +214,11 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
       }
       return true;
     }).sort((a, b) => {
+      if (sortField === 'vendor') {
+        const aVal = a.vendor || '';
+        const bVal = b.vendor || '';
+        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
       let aVal = a[sortField] || 0;
       let bVal = b[sortField] || 0;
       if (sortField === 'pricePerGB') {
@@ -210,7 +231,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         return aVal < bVal ? 1 : -1;
       }
     });
-  }, [listings, selectedGeneration, selectedCapacity, selectedSpeed, onlyBulkLots, priceTierFilter, searchTerm, sortField, sortDirection, skuPriceBounds]);
+  }, [listings, selectedGeneration, selectedCapacity, selectedSpeed, selectedVendor, onlyBulkLots, priceTierFilter, searchTerm, sortField, sortDirection, skuPriceBounds]);
 
   // Overall statistics for current filtered view
   const currentViewStats = useMemo(() => {
@@ -235,7 +256,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
     };
   }, [filteredListings]);
 
-  const handleSort = (field: 'pricePerUnit' | 'pricePerGB' | 'speedMTs' | 'capacityGB') => {
+  const handleSort = (field: 'pricePerUnit' | 'pricePerGB' | 'speedMTs' | 'capacityGB' | 'vendor') => {
     if (sortField === field) {
       setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
@@ -361,7 +382,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
-                  Standardized enterprise memory valuation benchmarks compiled from certified ITAD suppliers and primary secondary-market refurbishers (ServerSupply, CloudNinja, Memory.NET, IT Creations, and OEM channels) covering all 36 capacity and frequency specifications.
+                  Standardized enterprise memory valuation benchmarks compiled from certified ITAD suppliers and primary secondary-market refurbishers (ServerSupply, IT Creations, ServerMonkey, Memory4Less, and OEM channels) covering all 36 capacity and frequency specifications.
                 </p>
               </div>
             </div>
@@ -535,6 +556,23 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                 <option value="DDR5_3DS">DDR5 3DS</option>
               </select>
             </div>
+
+            {/* Vendor Filter (Curated Benchmark Catalog Only) */}
+            {catalogType === 'curatedBenchmark' && vendorOptions.length > 1 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-medium text-[11px]">Vendor:</span>
+                <select
+                  value={selectedVendor}
+                  onChange={(e) => setSelectedVendor(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-slate-200 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 max-w-[170px] truncate"
+                >
+                  <option value="ALL">All Vendors ({vendorOptions.length})</option>
+                  {vendorOptions.map(v => (
+                    <option key={v} value={v}>{v}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Bulk Lot Checkbox */}
@@ -578,6 +616,17 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                 <th className="py-3 px-3 whitespace-nowrap">Module Type</th>
                 <th className="py-3 px-3 whitespace-nowrap">Rank</th>
                 <th className="py-3 px-3 whitespace-nowrap">Part Number / Model</th>
+                {catalogType === 'curatedBenchmark' && (
+                  <th 
+                    onClick={() => handleSort('vendor')}
+                    className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
+                  >
+                    <div className="flex items-center gap-1">
+                      Vendor
+                      <ArrowUpDown className="w-3 h-3 text-slate-500" />
+                    </div>
+                  </th>
+                )}
                 <th className="py-3 px-3 whitespace-nowrap">Lot Qty</th>
                 <th 
                   onClick={() => handleSort('pricePerUnit')}
@@ -613,7 +662,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
             <tbody className="divide-y divide-slate-800/60">
               {filteredListings.length === 0 ? (
                 <tr>
-                  <td colSpan={12} className="py-8 text-center text-slate-500">
+                  <td colSpan={catalogType === 'curatedBenchmark' ? 13 : 11} className="py-8 text-center text-slate-500">
                     No memory listings match your selected filter criteria.
                   </td>
                 </tr>
@@ -714,6 +763,33 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                           {item.title}
                         </div>
                       </td>
+
+                      {/* Vendor (Curated Benchmark Catalog Only) */}
+                      {catalogType === 'curatedBenchmark' && (
+                        <td className="py-3 px-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-semibold text-slate-200">
+                              {item.vendor || 'Enterprise ITAD'}
+                            </span>
+                            {item.sourceUrl && (
+                              <a
+                                href={item.sourceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-slate-400 hover:text-indigo-400 p-0.5 transition-colors"
+                                title={`View ${item.vendor} source listing in new tab`}
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            )}
+                          </div>
+                          {item.vendorType && (
+                            <div className="text-[10px] text-slate-500 font-mono">
+                              {item.vendorType}
+                            </div>
+                          )}
+                        </td>
+                      )}
 
                       {/* Lot Qty */}
                       <td className="py-3 px-3 whitespace-nowrap">
