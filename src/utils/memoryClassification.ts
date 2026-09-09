@@ -13,8 +13,8 @@ export function detectModuleType(
 ): MemoryModuleType {
   const t = (title || '').toLowerCase();
   
-  // 1. Explicit 3DS / TSV indicators
-  if (/\b(?:3ds|tsv|3d[- ]stack|3ds[- ]rdimm)\b/i.test(t)) {
+  // 1. Explicit 3DS / TSV indicators (including 2S2R, 2S4R, 4S4R 3DS stacking standards)
+  if (/\b(?:3ds|tsv|3d[- ]stack|3ds[- ]rdimm|2s2r|2s4r|4s4r|2s2rx4|2s4rx4|4s4rx4)\b/i.test(t)) {
     return '3DS RDIMM';
   }
 
@@ -36,8 +36,11 @@ export function detectModuleType(
   // 3. Generation & Density architectural constraints
   if (generation === 'DDR5') {
     if (capacityGB >= 256) return '3DS RDIMM';
-    // 128GB DDR5: Check if explicitly 3DS or 4Rx4/8Rx4 TSV
-    if (capacityGB === 128 && (/\b(?:3ds|tsv|8rx4|4rx4)\b/i.test(t) && !/\b(?:2s2rx4|2rx4|m321|hmct04ag)\b/i.test(t))) {
+    // 128GB DDR5: 4Rx4, 8Rx4, 2S2R, TSV are 3DS; standard monolithic 2Rx4/1S2Rx4 remain RDIMM
+    if (capacityGB === 128 && (/\b(?:3ds|tsv|8rx4|4rx4|2s2r|2s4r|4s4r)\b/i.test(t) || !/\b(?:2rx4|1s2rx4)\b/i.test(t))) {
+      if (/\b(?:2rx4|1s2rx4)\b/i.test(t) && !/\b(?:3ds|tsv|2s2r|2s4r|4s4r)\b/i.test(t)) {
+        return 'RDIMM';
+      }
       return '3DS RDIMM';
     }
     return 'RDIMM';
