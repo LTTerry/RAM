@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   Info,
   DollarSign,
-  ShoppingCart,
+  Scale,
   Package,
   ShieldCheck,
   Server
@@ -25,7 +25,7 @@ interface MarketMatrixProps {
 
 export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, onSelectSpec }) => {
   const [activeGenTab, setActiveGenTab] = useState<'DDR3' | 'DDR4' | 'DDR5_MONO' | 'DDR5_3DS'>('DDR4');
-  const [displayMode, setDisplayMode] = useState<'range' | 'lowest' | 'highest' | 'retailBuyItNow'>('range');
+  const [displayMode, setDisplayMode] = useState<'range' | 'avg' | 'lowest' | 'highest'>('range');
   const [showPricingGuide, setShowPricingGuide] = useState(true);
 
   // Configuration for matrix axes per generation
@@ -243,7 +243,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                     </span>
                   </div>
                   <p className="text-slate-300 leading-relaxed">
-                    All highest and lowest prices shown in this matrix are derived from <strong>exact active and completed eBay listings</strong>. The <strong>Lowest Price</strong> reflects authentic bulk lots (e.g. 4x, 8x, 16x) and tested server pulls, while the <strong>Highest Price</strong> reflects single Buy-It-Now retail modules, matched pairs, or genuine Dell OEM / HP SmartMemory certified sticks.
+                    All highest, lowest, and average prices shown in this matrix are derived from <strong>exact active and completed eBay listings</strong>. The <strong>Lowest Price</strong> reflects authentic bulk lots and tested server pulls, while the <strong>Highest Price</strong> reflects certified single listings, matched pairs, or genuine OEM certified sticks.
                   </p>
                 </div>
               </div>
@@ -277,6 +277,17 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 📊 Exact eBay Range (Low to High)
               </button>
               <button
+                onClick={() => setDisplayMode('avg')}
+                className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
+                  displayMode === 'avg'
+                    ? 'bg-sky-600 text-white shadow-xs'
+                    : 'text-sky-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Scale className="w-3 h-3" />
+                ⚖️ Exact eBay Avg Price
+              </button>
+              <button
                 onClick={() => setDisplayMode('lowest')}
                 className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
                   displayMode === 'lowest'
@@ -285,7 +296,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 }`}
               >
                 <Package className="w-3 h-3" />
-                🟢 Exact Lowest eBay Listing
+                🟢 Exact Lowest Floor
               </button>
               <button
                 onClick={() => setDisplayMode('highest')}
@@ -296,25 +307,14 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 }`}
               >
                 <ShieldCheck className="w-3 h-3" />
-                🟣 Exact Highest eBay Listing
-              </button>
-              <button
-                onClick={() => setDisplayMode('retailBuyItNow')}
-                className={`px-2.5 py-1 font-semibold rounded transition-all flex items-center gap-1.5 ${
-                  displayMode === 'retailBuyItNow'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-indigo-400 hover:text-white hover:bg-slate-900'
-                }`}
-              >
-                <ShoppingCart className="w-3 h-3" />
-                🛒 Exact 1x Buy-It-Now
+                🟣 Exact Highest Ceiling
               </button>
             </div>
           </div>
 
           <div className="text-[11px] text-slate-400 flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>All values from <strong>Exact eBay Active Listings</strong> (Lowest, Highest, Spread & Buy-It-Now)</span>
+            <span>All values from <strong>Exact eBay Active Listings</strong> (Lowest, Highest, Average & Spread)</span>
           </div>
         </div>
       </div>
@@ -329,10 +329,10 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
             </h3>
             <span className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-300 font-mono">
               Active: {
-                displayMode === 'retailBuyItNow' ? '🛒 Exact 1x Buy-It-Now' :
+                displayMode === 'avg' ? '⚖️ Exact eBay Avg Price' :
                 displayMode === 'range' ? '📊 Exact Lowest to Highest eBay Listing' :
-                displayMode === 'lowest' ? '🟢 Exact Lowest eBay Listing' :
-                '🟣 Exact Highest eBay Listing'
+                displayMode === 'lowest' ? '🟢 Exact Lowest eBay Listing Floor' :
+                '🟣 Exact Highest eBay Listing Ceiling'
               }
             </span>
           </div>
@@ -397,24 +397,24 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                           onClick={() => onSelectSpec(activeGenTab, cap, speed)}
                           className="group relative p-3 rounded-lg bg-slate-900/90 hover:bg-slate-850 border border-slate-800 hover:border-indigo-500/50 transition-all shadow-xs cursor-pointer flex flex-col justify-between"
                         >
-                          {/* Retail Buy It Now Mode (Default) */}
-                          {displayMode === 'retailBuyItNow' && (
+                          {/* Exact eBay Avg Mode */}
+                          {displayMode === 'avg' && (
                             <div className="space-y-1">
-                              <div className="text-[9px] uppercase font-bold text-indigo-400 tracking-wider flex items-center justify-between">
+                              <div className="text-[9px] uppercase font-bold text-sky-400 tracking-wider flex items-center justify-between">
                                 <span className="flex items-center gap-1">
-                                  <ShoppingCart className="w-2.5 h-2.5" />
-                                  Exact 1x Buy-It-Now
+                                  <Scale className="w-2.5 h-2.5" />
+                                  Exact eBay Avg
                                 </span>
-                                <span className="text-indigo-300 font-mono">
-                                  ${stats.retailPricePerGB.toFixed(2)}/GB
+                                <span className="text-sky-300 font-mono">
+                                  ${stats.avgPricePerGB.toFixed(2)}/GB
                                 </span>
                               </div>
-                              <div className="text-lg font-bold text-indigo-200 font-mono">
-                                ${stats.singleUnitRetail.toFixed(2)}
+                              <div className="text-lg font-bold text-sky-200 font-mono">
+                                ${stats.avgPrice.toFixed(2)}
                               </div>
                               <div className="text-[10px] text-slate-400 flex items-center justify-between pt-0.5 border-t border-slate-800">
-                                <span>Exact Lowest eBay:</span>
-                                <strong className="text-emerald-400 font-mono">${stats.minPrice.toFixed(2)}</strong>
+                                <span>Spread:</span>
+                                <strong className="text-amber-400 font-mono">+${stats.spread.toFixed(2)}</strong>
                               </div>
                             </div>
                           )}
@@ -442,7 +442,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                               </div>
 
                               <div className="pt-1.5 flex items-center justify-between text-[10px] font-mono border-t border-slate-800/80">
-                                <span className="text-indigo-300">
+                                <span className="text-sky-300">
                                   eBay Avg: <strong>${stats.avgPrice.toFixed(2)}</strong>
                                 </span>
                                 <span className="text-slate-400">
@@ -456,7 +456,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                           {displayMode === 'lowest' && (
                             <div className="space-y-1">
                               <div className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider flex items-center justify-between">
-                                <span>Exact Lowest Listing</span>
+                                <span>Exact Lowest Floor</span>
                                 <span className="text-emerald-400 font-mono">${stats.minPricePerGB.toFixed(2)}/GB</span>
                               </div>
                               <div className="text-lg font-bold text-emerald-400 font-mono">
@@ -472,7 +472,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                           {displayMode === 'highest' && (
                             <div className="space-y-1">
                               <div className="text-[9px] uppercase font-bold text-purple-400 tracking-wider flex items-center justify-between">
-                                <span>Exact Highest Listing</span>
+                                <span>Exact Highest Ceiling</span>
                                 <span className="text-purple-300 font-mono">${stats.maxPricePerGB.toFixed(2)}/GB</span>
                               </div>
                               <div className="text-lg font-bold text-purple-300 font-mono">
@@ -532,16 +532,16 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
         <div className="bg-slate-950/80 px-4 py-3 border-t border-slate-800 text-[11px] text-slate-400 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-indigo-400"></span>
-              <strong className="text-slate-200">1x Buy-It-Now:</strong> Exact single stick retail Buy-It-Now price on eBay
-            </span>
-            <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              <strong className="text-slate-200">Lowest eBay Listing:</strong> Exact lowest active listing price on eBay
+              <strong className="text-slate-200">Lowest Floor:</strong> Exact lowest active listing price on eBay
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
-              <strong className="text-slate-200">Highest eBay Listing:</strong> Exact highest active listing price on eBay
+              <strong className="text-slate-200">Highest Ceiling:</strong> Exact highest active listing price on eBay
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
+              <strong className="text-slate-200">eBay Avg:</strong> Normalized mean price across active listings
             </span>
           </div>
 

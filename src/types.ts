@@ -62,7 +62,6 @@ export interface MarketTrend {
   currentAvgPrice: number;
   lowestAskingCurrent: number;
   highestAskingCurrent: number;
-  singleUnitRetailPrice?: number;
   wholesaleTrayPrice?: number;
   ebayHighestSoldPrice?: number;
   ebayHighestSoldDate?: string;

@@ -296,6 +296,10 @@ export default function App() {
             trends={trends}
             selectedTimezone={selectedTimezone}
             lastUpdatedTimestamp={latestTimestamp}
+            onSelectSpec={(gen, cap, speed) => {
+              const standardGen: MemoryGeneration = gen.startsWith('DDR5') ? 'DDR5' : gen as MemoryGeneration;
+              handleSelectMatrixSpec(standardGen, cap, speed);
+            }}
           />
         )}
       </main>

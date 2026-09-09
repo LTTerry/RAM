@@ -347,7 +347,7 @@ async function searchEbayPrices(token: string, trend: any) {
   
   const data = await response.json();
   if (data.itemSummaries && data.itemSummaries.length > 0) {
-    const refPrice = trend.singleUnitRetailPrice || trend.currentAvgPrice || trend.avgPrice1MoAgo || 20;
+    const refPrice = trend.currentAvgPrice || trend.avgPrice1MoAgo || 20;
 
     const skuItems: any[] = [];
     const unitPrices: number[] = [];

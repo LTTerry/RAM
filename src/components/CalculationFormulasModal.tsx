@@ -141,7 +141,7 @@ export const CalculationFormulasModal: React.FC<CalculationFormulasModalProps> =
             </div>
           </div>
 
-          {/* Formula 4: Retail $/GB */}
+          {/* Formula 4: Avg $/GB */}
           <div className="bg-slate-950/60 border border-slate-800 rounded-xl p-4.5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -149,9 +149,9 @@ export const CalculationFormulasModal: React.FC<CalculationFormulasModalProps> =
                   4
                 </span>
                 <h3 className="font-bold text-white text-sm flex items-center gap-2">
-                  Retail $/GB
+                  Avg $/GB
                   <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                    unitPricePerGB
+                    pricePerGB
                   </span>
                 </h3>
               </div>
@@ -159,7 +159,7 @@ export const CalculationFormulasModal: React.FC<CalculationFormulasModalProps> =
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-lg p-3 font-mono text-xs text-emerald-300 overflow-x-auto">
-              Retail $/GB = ( Single Unit Retail Price ) / ( Module Capacity in GB )
+              Avg $/GB = ( Exact eBay Avg Price ) / ( Module Capacity in GB )
             </div>
 
             <div className="space-y-1.5 text-xs text-slate-300">
@@ -167,7 +167,7 @@ export const CalculationFormulasModal: React.FC<CalculationFormulasModalProps> =
                 <strong className="text-white">Why $/GB Matters:</strong> Allows direct cost-per-gigabyte comparison across capacities (16GB vs 32GB vs 64GB vs 128GB vs 256GB).
               </p>
               <div className="bg-slate-900/80 p-2.5 rounded border border-slate-800/80 text-[11px] text-slate-300">
-                Typically, sweet-spot capacities (e.g., DDR4 32GB/64GB) offer the lowest $/GB ($1.10 - $1.40/GB), whereas highest-density 3DS modules (128GB/256GB) command steep density premiums ($5.00+ /GB).
+                Typically, sweet-spot capacities (e.g., DDR4 32GB/64GB) offer the lowest $/GB ($0.70 - $1.20/GB), whereas highest-density 3DS modules (128GB/256GB) command steep density premiums ($5.00+ /GB).
               </div>
             </div>
           </div>
