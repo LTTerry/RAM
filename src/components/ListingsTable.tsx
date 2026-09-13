@@ -10,20 +10,21 @@ import {
   Layers, 
   Building2, 
   Tag, 
-  CheckCircle2,
-  AlertCircle,
-  TrendingDown,
-  TrendingUp,
-  DollarSign,
-  ArrowDownRight,
-  ArrowUpRight,
-  Clock,
-  Calendar
+  CheckCircle2, 
+  AlertCircle, 
+  TrendingDown, 
+  TrendingUp, 
+  DollarSign, 
+  ArrowDownRight, 
+  ArrowUpRight, 
+  Clock, 
+  Calendar 
 } from 'lucide-react';
 import { RamListing, MemoryGeneration, MarketTrend } from '../types';
 import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
 import { SupportedTimezone, formatToTimezone } from '../utils/timeFormat';
 import { detectModuleType, extractMemoryRank } from '../utils/memoryClassification';
+import { useLanguage } from '../context/LanguageContext';
 
 interface ListingsTableProps {
   listings: RamListing[];
@@ -118,6 +119,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   selectedTimezone = 'Asia/Hong_Kong',
   lastUpdatedTimestamp,
 }) => {
+  const { language, t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCapacity, setSelectedCapacity] = useState<string>('ALL');
   const [selectedSpeed, setSelectedSpeed] = useState<string>('ALL');
@@ -347,20 +349,22 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base font-bold text-white tracking-tight">
-                    All Asking Prices & Vendors — Live eBay Feed
+                    {language === 'zh-CN' ? '全部要价与供应商 — eBay 实时数据流' : 'All Asking Prices & Vendors — Live eBay Feed'}
                   </h2>
                   <span className="bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                    Live Production API Feed
+                    {language === 'zh-CN' ? '实时生产 API 数据流' : 'Live Production API Feed'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
-                  Real-time active marketplace listings retrieved directly from the official eBay Browse API across all 36 server memory SKUs. Each item includes live seller information, unit pricing normalized from multi-stick lots/kits, and direct links to the live eBay listing.
+                  {language === 'zh-CN'
+                    ? '通过官方 eBay Browse API 直接获取的 36 个服务器内存规格实时活跃挂牌。每条记录均包含真实卖家信息、按套条折算的单条单价以及直达 eBay 原贴的链接。'
+                    : 'Real-time active marketplace listings retrieved directly from the official eBay Browse API across all 36 server memory SKUs. Each item includes live seller information, unit pricing normalized from multi-stick lots/kits, and direct links to the live eBay listing.'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
-              <span className="text-[11px] text-slate-400">Total Live Items:</span>
+              <span className="text-[11px] text-slate-400">{language === 'zh-CN' ? '实时在售总数:' : 'Total Live Items:'}</span>
               <span className="text-xs font-mono font-bold text-emerald-400">{listings.length}</span>
             </div>
           </div>
@@ -375,19 +379,21 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h2 className="text-base font-bold text-white tracking-tight">
-                    Curated Benchmark Catalog — ITAD Enterprise Baselines
+                    {language === 'zh-CN' ? '精选基准目录 — ITAD 企业级估值基准' : 'Curated Benchmark Catalog — ITAD Enterprise Baselines'}
                   </h2>
                   <span className="bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full">
-                    Enterprise Multi-Vendor Index
+                    {language === 'zh-CN' ? '企业级多供应商指数' : 'Enterprise Multi-Vendor Index'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
-                  Standardized enterprise memory valuation benchmarks compiled from certified ITAD suppliers and primary secondary-market refurbishers (ServerSupply, IT Creations, ServerMonkey, Memory4Less, and OEM channels) covering all 36 capacity and frequency specifications.
+                  {language === 'zh-CN'
+                    ? '标准化企业级内存估值基准，汇集自认证 ITAD 供应商与主要二手再制造渠道（ServerSupply、IT Creations、ServerMonkey、Memory4Less 及 OEM 渠道），覆盖全部 36 种规格。'
+                    : 'Standardized enterprise memory valuation benchmarks compiled from certified ITAD suppliers and primary secondary-market refurbishers (ServerSupply, IT Creations, ServerMonkey, Memory4Less, and OEM channels) covering all 36 capacity and frequency specifications.'}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2 self-start md:self-auto shrink-0 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
-              <span className="text-[11px] text-slate-400">Curated Benchmarks:</span>
+              <span className="text-[11px] text-slate-400">{language === 'zh-CN' ? '精选基准总数:' : 'Curated Benchmarks:'}</span>
               <span className="text-xs font-mono font-bold text-indigo-400">{listings.length}</span>
             </div>
           </div>
@@ -401,7 +407,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="bg-slate-900/60 rounded-xl p-4 border border-emerald-500/30 shadow-xs relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400">
-                🟢 Lowest Used Price (Floor)
+                {language === 'zh-CN' ? '🟢 最低二手价 (底价 Floor)' : '🟢 Lowest Used Price (Floor)'}
               </span>
               <span className="text-[10px] text-slate-400 font-mono">
                 {currentViewStats.lowestItem?.vendor}
@@ -419,7 +425,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="bg-slate-900/60 rounded-xl p-4 border border-purple-500/30 shadow-xs relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-bold tracking-wider text-purple-400">
-                🟣 Highest Used Price (Ceiling)
+                {language === 'zh-CN' ? '🟣 最高二手价 (高价 Ceiling)' : '🟣 Highest Used Price (Ceiling)'}
               </span>
               <span className="text-[10px] text-slate-400 font-mono">
                 {currentViewStats.highestItem?.vendor}
@@ -437,17 +443,17 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="bg-slate-900/60 rounded-xl p-4 border border-slate-800 shadow-xs">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-bold tracking-wider text-sky-400">
-                ⚖️ Current Market Average
+                {language === 'zh-CN' ? '⚖️ 当前市场均价' : '⚖️ Current Market Average'}
               </span>
               <span className="text-[10px] text-slate-400 font-mono">
-                {currentViewStats.count} listings
+                {currentViewStats.count} {language === 'zh-CN' ? '条在售' : 'listings'}
               </span>
             </div>
             <div className="mt-1 text-2xl font-bold text-sky-300 font-mono">
               ${currentViewStats.avgPrice.toFixed(2)}
             </div>
             <div className="text-[11px] text-slate-400 mt-1">
-              Weighted cross-vendor baseline
+              {language === 'zh-CN' ? '多供应商加权市场基准' : 'Weighted cross-vendor baseline'}
             </div>
           </div>
 
@@ -455,10 +461,10 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="bg-slate-900/60 rounded-xl p-4 border border-slate-800 shadow-xs">
             <div className="flex items-center justify-between">
               <span className="text-[10px] uppercase font-bold tracking-wider text-amber-400">
-                📊 Gross ITAD Spread
+                {language === 'zh-CN' ? '📊 ITAD 毛价差' : '📊 Gross ITAD Spread'}
               </span>
               <span className="text-[10px] text-amber-400/80 font-mono">
-                Floor → Ceiling
+                {language === 'zh-CN' ? '底价 → 高价' : 'Floor → Ceiling'}
               </span>
             </div>
             <div className="mt-1 text-2xl font-bold text-amber-300 font-mono">
@@ -466,8 +472,10 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
             </div>
             <div className="text-[11px] text-slate-400 mt-1">
               {currentViewStats.minPrice > 0 
-                ? `+${((currentViewStats.spread / currentViewStats.minPrice) * 100).toFixed(0)}% margin potential`
-                : 'Arbitrage window'}
+                ? (language === 'zh-CN' 
+                    ? `+${((currentViewStats.spread / currentViewStats.minPrice) * 100).toFixed(0)}% 利润空间` 
+                    : `+${((currentViewStats.spread / currentViewStats.minPrice) * 100).toFixed(0)}% margin potential`)
+                : (language === 'zh-CN' ? '套利窗口' : 'Arbitrage window')}
             </div>
           </div>
         </div>
@@ -483,7 +491,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by Part No (e.g. M393A, HMA84), model, Dell/HP OEM, or title..."
+              placeholder={language === 'zh-CN' ? '按部件号(如 M393A, HMA84)、型号、OEM 或标题搜索...' : 'Search by Part No (e.g. M393A, HMA84), model, Dell/HP OEM, or title...'}
               className="w-full pl-9 pr-4 py-2 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-200 placeholder-slate-500 focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
             />
           </div>
@@ -492,14 +500,14 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-300 bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-800">
               <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Research: <strong className="text-white">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).dateString}</strong> • <strong className="text-amber-300">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzOffsetLabel} {formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzBadge})</span></span>
+              <span>{language === 'zh-CN' ? '更新时间: ' : 'Research: '}<strong className="text-white">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).dateString}</strong> • <strong className="text-amber-300">{formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzOffsetLabel} {formatToTimezone(lastUpdatedTimestamp || metadata.isoTimestamp || "2026-09-04T02:57:22.498Z", selectedTimezone).tzBadge})</span></span>
             </div>
             <button
               onClick={exportCSV}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-slate-700 shadow-xs"
+              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold px-3 py-2 rounded-lg transition-colors border border-slate-700 shadow-xs cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-slate-400" />
-              Export ITAD CSV ({filteredListings.length})
+              {language === 'zh-CN' ? `导出 CSV (${filteredListings.length})` : `Export ITAD CSV (${filteredListings.length})`}
             </button>
           </div>
         </div>
@@ -517,7 +525,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                All Prices
+                {language === 'zh-CN' ? '全部价格' : 'All Prices'}
               </button>
               <button
                 onClick={() => setPriceTierFilter('LOWEST_ONLY')}
@@ -527,7 +535,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                     : 'text-slate-400 hover:text-emerald-400'
                 }`}
               >
-                <span>🟢 Lowest (Floors)</span>
+                <span>{language === 'zh-CN' ? '🟢 仅看最低 (底价)' : '🟢 Lowest (Floors)'}</span>
               </button>
               <button
                 onClick={() => setPriceTierFilter('HIGHEST_ONLY')}
@@ -537,22 +545,22 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                     : 'text-slate-400 hover:text-purple-300'
                 }`}
               >
-                <span>🟣 Highest (Ceilings)</span>
+                <span>{language === 'zh-CN' ? '🟣 仅看最高 (高价)' : '🟣 Highest (Ceilings)'}</span>
               </button>
             </div>
 
             {/* Generation */}
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-medium text-[11px]">Gen:</span>
+              <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '代际:' : 'Gen:'}</span>
               <select
                 value={selectedGeneration}
                 onChange={(e) => onFilterGeneration(e.target.value as any)}
                 className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-slate-200 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
               >
-                <option value="ALL">All Gens (DDR3/4/5)</option>
+                <option value="ALL">{language === 'zh-CN' ? '全部代际 (DDR3/4/5)' : 'All Gens (DDR3/4/5)'}</option>
                 <option value="DDR3">DDR3</option>
                 <option value="DDR4">DDR4</option>
-                <option value="DDR5_MONO">DDR5 Monolithic</option>
+                <option value="DDR5_MONO">{language === 'zh-CN' ? 'DDR5 单芯片' : 'DDR5 Monolithic'}</option>
                 <option value="DDR5_3DS">DDR5 3DS</option>
               </select>
             </div>
@@ -560,13 +568,13 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
             {/* Vendor Filter (Curated Benchmark Catalog Only) */}
             {catalogType === 'curatedBenchmark' && vendorOptions.length > 1 && (
               <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 font-medium text-[11px]">Vendor:</span>
+                <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '供应商:' : 'Vendor:'}</span>
                 <select
                   value={selectedVendor}
                   onChange={(e) => setSelectedVendor(e.target.value)}
                   className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-slate-200 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 max-w-[170px] truncate"
                 >
-                  <option value="ALL">All Vendors ({vendorOptions.length})</option>
+                  <option value="ALL">{language === 'zh-CN' ? `全部供应商 (${vendorOptions.length})` : `All Vendors (${vendorOptions.length})`}</option>
                   {vendorOptions.map(v => (
                     <option key={v} value={v}>{v}</option>
                   ))}
@@ -583,7 +591,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
               onChange={(e) => setOnlyBulkLots(e.target.checked)}
               className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950 border-slate-800"
             />
-            Show Bulk Tray / Lot Listings Only
+            {language === 'zh-CN' ? '仅显示批量/托盘挂牌 (Lot/Tray)' : 'Show Bulk Tray / Lot Listings Only'}
           </label>
         </div>
       </div>
@@ -594,13 +602,13 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-950 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800 text-[10px]">
-                <th className="py-3 px-3 whitespace-nowrap">Gen</th>
+                <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '代际' : 'Gen'}</th>
                 <th 
                   onClick={() => handleSort('capacityGB')}
                   className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    Capacity
+                    {language === 'zh-CN' ? '容量' : 'Capacity'}
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
@@ -609,31 +617,31 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    Speed / Standard
+                    {language === 'zh-CN' ? '频率 / 标准' : 'Speed / Standard'}
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
-                <th className="py-3 px-3 whitespace-nowrap">Module Type</th>
-                <th className="py-3 px-3 whitespace-nowrap">Rank</th>
-                <th className="py-3 px-3 whitespace-nowrap">Part Number / Model</th>
+                <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '模组类型' : 'Module Type'}</th>
+                <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? 'Rank 规格' : 'Rank'}</th>
+                <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '部件号 / 型号' : 'Part Number / Model'}</th>
                 {catalogType === 'curatedBenchmark' && (
                   <th 
                     onClick={() => handleSort('vendor')}
                     className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                   >
                     <div className="flex items-center gap-1">
-                      Vendor
+                      {language === 'zh-CN' ? '供应商' : 'Vendor'}
                       <ArrowUpDown className="w-3 h-3 text-slate-500" />
                     </div>
                   </th>
                 )}
-                <th className="py-3 px-3 whitespace-nowrap">Lot Qty</th>
+                <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '批量数量' : 'Lot Qty'}</th>
                 <th 
                   onClick={() => handleSort('pricePerUnit')}
                   className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    Unit Price ($) / Position
+                    {language === 'zh-CN' ? '单价 ($) / 位置' : 'Unit Price ($) / Position'}
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
@@ -642,19 +650,19 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   className="py-3 px-3 cursor-pointer hover:text-white whitespace-nowrap"
                 >
                   <div className="flex items-center gap-1">
-                    $/GB Rate
+                    {language === 'zh-CN' ? '每 GB 费率' : '$/GB Rate'}
                     <ArrowUpDown className="w-3 h-3 text-slate-500" />
                   </div>
                 </th>
-                <th className="py-3 px-3 whitespace-nowrap">Condition & Testing</th>
+                <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '成色与测试' : 'Condition & Testing'}</th>
                 {catalogType === 'curatedBenchmark' ? (
                   <>
-                    <th className="py-3 px-3 whitespace-nowrap">1-Week Trend</th>
-                    <th className="py-3 px-3 whitespace-nowrap">90-Day Trend</th>
+                    <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '1周趋势' : '1-Week Trend'}</th>
+                    <th className="py-3 px-3 whitespace-nowrap">{language === 'zh-CN' ? '90天走势' : '90-Day Trend'}</th>
                   </>
                 ) : (
                   <th className="py-3 px-3 text-right whitespace-nowrap">
-                    Listing Action
+                    {language === 'zh-CN' ? '操作' : 'Listing Action'}
                   </th>
                 )}
               </tr>
@@ -663,7 +671,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
               {filteredListings.length === 0 ? (
                 <tr>
                   <td colSpan={catalogType === 'curatedBenchmark' ? 13 : 11} className="py-8 text-center text-slate-500">
-                    No memory listings match your selected filter criteria.
+                    {language === 'zh-CN' ? '暂无符合所选筛选条件的记录。' : 'No memory listings match your selected filter criteria.'}
                   </td>
                 </tr>
               ) : (
@@ -697,7 +705,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         {item.capacityGB} GB
                         {(item.capacityGB === 24 || item.capacityGB === 48 || item.capacityGB === 96) && (
                           <span className="ml-1 text-[9px] bg-purple-500/20 text-purple-300 border border-purple-500/30 px-1 py-0.2 rounded font-sans">
-                            Non-Bin
+                            {language === 'zh-CN' ? '非二进制' : 'Non-Bin'}
                           </span>
                         )}
                         {effectiveModType === '3DS RDIMM' && (
@@ -746,8 +754,8 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                             </span>
                             <button
                               onClick={() => copyPartNumber(item.partNumber!, item.id)}
-                              className="text-slate-400 hover:text-white p-0.5"
-                              title="Copy OEM Part Number"
+                              className="text-slate-400 hover:text-white p-0.5 cursor-pointer"
+                              title={language === 'zh-CN' ? '复制部件号' : 'Copy OEM Part Number'}
                             >
                               {copiedId === item.id ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -757,7 +765,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                             </button>
                           </div>
                         ) : (
-                          <span className="text-slate-500 italic">OEM Equivalent</span>
+                          <span className="text-slate-500 italic">{language === 'zh-CN' ? 'OEM 等效' : 'OEM Equivalent'}</span>
                         )}
                         <div className="text-[11px] text-slate-400 truncate max-w-[220px]" title={item.title}>
                           {item.title}
@@ -769,7 +777,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         <td className="py-3 px-3 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
                             <span className="font-semibold text-slate-200">
-                              {item.vendor || 'Enterprise ITAD'}
+                              {item.vendor || (language === 'zh-CN' ? '企业级 ITAD' : 'Enterprise ITAD')}
                             </span>
                             {item.sourceUrl && (
                               <a
@@ -796,14 +804,14 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                         {item.lotQuantity > 1 ? (
                           <div>
                             <span className="bg-amber-500/10 text-amber-300 border border-amber-500/20 font-bold px-1.5 py-0.5 rounded text-[10px]">
-                              Lot of {item.lotQuantity}
+                              {language === 'zh-CN' ? `批量 ${item.lotQuantity} 根` : `Lot of ${item.lotQuantity}`}
                             </span>
                             <div className="text-[10px] text-slate-400 mt-0.5 font-mono">
-                              ${item.totalLotPrice?.toFixed(2)} tot
+                              ${item.totalLotPrice?.toFixed(2)} {language === 'zh-CN' ? '总计' : 'tot'}
                             </div>
                           </div>
                         ) : (
-                          <span className="text-slate-500">Single (1x)</span>
+                          <span className="text-slate-500">{language === 'zh-CN' ? '单条 (1根)' : 'Single (1x)'}</span>
                         )}
                       </td>
 
@@ -815,12 +823,12 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                           </div>
                           {isLowest && (
                             <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] font-bold px-1.5 py-0.2 rounded uppercase tracking-wider font-mono">
-                              Floor Low
+                              {language === 'zh-CN' ? '最低底价' : 'Floor Low'}
                             </span>
                           )}
                           {isHighest && (
                             <span className="bg-purple-500/20 text-purple-300 border border-purple-500/40 text-[9px] font-bold px-1.5 py-0.2 rounded uppercase tracking-wider font-mono">
-                              Ceiling High
+                              {language === 'zh-CN' ? '最高售价' : 'Ceiling High'}
                             </span>
                           )}
                         </div>
@@ -844,7 +852,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                           {item.condition}
                         </div>
                         <div className="text-[10px] text-slate-500">
-                          {item.warranty || '30-Day Warranty'}
+                          {item.warranty || (language === 'zh-CN' ? '30天保修' : '30-Day Warranty')}
                         </div>
                       </td>
 
@@ -876,10 +884,10 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                               href={item.sourceUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border border-slate-700 hover:border-indigo-400 shadow-xs group"
-                              title="Open live eBay listing in a new tab"
+                              className="inline-flex items-center gap-1.5 bg-slate-800/90 hover:bg-indigo-600 text-slate-300 hover:text-white px-2.5 py-1 rounded-md text-[11px] font-medium transition-all border border-slate-700 hover:border-indigo-400 shadow-xs group cursor-pointer"
+                              title={language === 'zh-CN' ? '在 eBay 新标签页中打开' : 'Open live eBay listing in a new tab'}
                             >
-                              <span>View on eBay</span>
+                              <span>{language === 'zh-CN' ? '查看 eBay' : 'View on eBay'}</span>
                               <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-white transition-colors" />
                             </a>
                           ) : (

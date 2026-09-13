@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { RamListing, MemoryGeneration, MarketTrend } from '../types';
 import { MARKET_TRENDS_DATA } from '../data/marketTrendsData';
+import { useLanguage } from '../context/LanguageContext';
 
 interface MarketMatrixProps {
   listings: RamListing[];
@@ -24,6 +25,7 @@ interface MarketMatrixProps {
 }
 
 export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, onSelectSpec }) => {
+  const { language, t } = useLanguage();
   const [activeGenTab, setActiveGenTab] = useState<'DDR3' | 'DDR4' | 'DDR5_MONO' | 'DDR5_3DS'>('DDR4');
   const [displayMode, setDisplayMode] = useState<'range' | 'avg' | 'lowest' | 'highest'>('range');
   const [showPricingGuide, setShowPricingGuide] = useState(true);
@@ -158,6 +160,15 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
     };
   };
 
+  const getGenTabName = (tab: 'DDR3' | 'DDR4' | 'DDR5_MONO' | 'DDR5_3DS') => {
+    switch (tab) {
+      case 'DDR3': return 'DDR3';
+      case 'DDR4': return 'DDR4';
+      case 'DDR5_MONO': return language === 'zh-CN' ? 'DDR5 单芯片(Mono)' : 'DDR5 Monolithic';
+      case 'DDR5_3DS': return language === 'zh-CN' ? 'DDR5 3DS 堆叠' : 'DDR5 3DS';
+    }
+  };
+
   return (
     <div className="space-y-5">
       {/* Matrix Controls & Perspective Selector */}
@@ -170,16 +181,16 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 activeGenTab === 'DDR4' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
                 'bg-rose-500/10 text-rose-300 border border-rose-500/20'
               }`}>
-                {activeGenTab} Exact Market Matrix
+                {getGenTabName(activeGenTab)} {language === 'zh-CN' ? '精确市场矩阵' : 'Exact Market Matrix'}
               </span>
               <span className="text-xs text-slate-400">
-                Exact eBay Lowest & Highest Listing Prices
+                {language === 'zh-CN' ? 'eBay 底价与高价真实挂牌记录' : 'Exact eBay Lowest & Highest Listing Prices'}
               </span>
             </div>
             <h2 className="text-lg font-bold text-white mt-1 flex items-center gap-2 flex-wrap">
-              <span>Enterprise Memory Market Matrix</span>
+              <span>{t('matrix.title', 'Enterprise Memory Market Matrix')}</span>
               <span className="text-xs font-normal text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded">
-                Exact eBay Listing Verified
+                {language === 'zh-CN' ? '已核验 eBay 真实记录' : 'Exact eBay Listing Verified'}
               </span>
             </h2>
           </div>
@@ -214,7 +225,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
               }`}
             >
-              DDR5 Monolithic
+              {language === 'zh-CN' ? 'DDR5 单芯片(Mono)' : 'DDR5 Monolithic'}
             </button>
             <button
               onClick={() => setActiveGenTab('DDR5_3DS')}
@@ -224,7 +235,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                   : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
               }`}
             >
-              DDR5 3DS
+              {language === 'zh-CN' ? 'DDR5 3DS 堆叠' : 'DDR5 3DS'}
             </button>
           </div>
         </div>
@@ -237,13 +248,15 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
                 <div className="space-y-1">
                   <div className="font-bold text-indigo-200 flex items-center gap-2">
-                    <span>Exact eBay Listing Pricing (Zero Estimates)</span>
+                    <span>{language === 'zh-CN' ? '真实 eBay 挂牌价（非估算推导）' : 'Exact eBay Listing Pricing (Zero Estimates)'}</span>
                     <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.2 rounded font-mono">
-                      Exact eBay Verified
+                      {language === 'zh-CN' ? 'eBay 实测验证' : 'Exact eBay Verified'}
                     </span>
                   </div>
                   <p className="text-slate-300 leading-relaxed">
-                    All highest, lowest, and average prices shown in this matrix are derived from <strong>exact active and completed eBay listings</strong>. The <strong>Lowest Price</strong> reflects authentic bulk lots and tested server pulls, while the <strong>Highest Price</strong> reflects certified single listings, matched pairs, or genuine OEM certified sticks.
+                    {language === 'zh-CN'
+                      ? '本矩阵中展示的所有最高价、最低价和均价均提取自真实的 eBay 实时与已完成挂牌记录。最低价通常代表批量出货或已测试服务器拆机条，最高价代表经过验证的单条零售、配对套条或原厂认证部件。'
+                      : 'All highest, lowest, and average prices shown in this matrix are derived from exact active and completed eBay listings. The Lowest Price reflects authentic bulk lots and tested server pulls, while the Highest Price reflects certified single listings, matched pairs, or genuine OEM certified sticks.'}
                   </p>
                 </div>
               </div>
@@ -251,7 +264,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 onClick={() => setShowPricingGuide(false)}
                 className="text-[10px] text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 shrink-0"
               >
-                Dismiss
+                {language === 'zh-CN' ? '关闭提示' : 'Dismiss'}
               </button>
             </div>
           </div>
@@ -262,7 +275,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
               <SlidersHorizontal className="w-3.5 h-3.5 text-indigo-400" />
-              View Perspective:
+              {language === 'zh-CN' ? '展示视角:' : 'View Perspective:'}
             </span>
             <div className="flex flex-wrap items-center bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs gap-1">
               <button
@@ -274,7 +287,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 }`}
               >
                 <TrendingUp className="w-3 h-3" />
-                📊 Exact eBay Range (Low to High)
+                {language === 'zh-CN' ? '📊 底价至高价区间' : '📊 Exact eBay Range (Low to High)'}
               </button>
               <button
                 onClick={() => setDisplayMode('avg')}
@@ -285,7 +298,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 }`}
               >
                 <Scale className="w-3 h-3" />
-                ⚖️ Exact eBay Avg Price
+                {language === 'zh-CN' ? '⚖️ eBay 均价' : '⚖️ Exact eBay Avg Price'}
               </button>
               <button
                 onClick={() => setDisplayMode('lowest')}
@@ -296,7 +309,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 }`}
               >
                 <Package className="w-3 h-3" />
-                🟢 Exact Lowest Floor
+                {language === 'zh-CN' ? '🟢 最低底价' : '🟢 Exact Lowest Floor'}
               </button>
               <button
                 onClick={() => setDisplayMode('highest')}
@@ -307,14 +320,18 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                 }`}
               >
                 <ShieldCheck className="w-3 h-3" />
-                🟣 Exact Highest Ceiling
+                {language === 'zh-CN' ? '🟣 最高售价' : '🟣 Exact Highest Ceiling'}
               </button>
             </div>
           </div>
 
           <div className="text-[11px] text-slate-400 flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>All values from <strong>Exact eBay Active Listings</strong> (Lowest, Highest, Average & Spread)</span>
+            <span>
+              {language === 'zh-CN'
+                ? '所有数值均来自 eBay 真实活跃记录（底价、高价、均价与价差）'
+                : 'All values from Exact eBay Active Listings (Lowest, Highest, Average & Spread)'}
+            </span>
           </div>
         </div>
       </div>
@@ -325,19 +342,20 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-xs uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
               <Server className="w-3.5 h-3.5 text-indigo-400" />
-              {activeGenTab} Pricing Grid
+              {getGenTabName(activeGenTab)} {language === 'zh-CN' ? '定价矩阵' : 'Pricing Grid'}
             </h3>
             <span className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-300 font-mono">
-              Active: {
-                displayMode === 'avg' ? '⚖️ Exact eBay Avg Price' :
-                displayMode === 'range' ? '📊 Exact Lowest to Highest eBay Listing' :
-                displayMode === 'lowest' ? '🟢 Exact Lowest eBay Listing Floor' :
-                '🟣 Exact Highest eBay Listing Ceiling'
+              {language === 'zh-CN' ? '当前视角: ' : 'Active: '}
+              {
+                displayMode === 'avg' ? (language === 'zh-CN' ? '⚖️ eBay 均价' : '⚖️ Exact eBay Avg Price') :
+                displayMode === 'range' ? (language === 'zh-CN' ? '📊 底价至高价区间' : '📊 Exact Lowest to Highest eBay Listing') :
+                displayMode === 'lowest' ? (language === 'zh-CN' ? '🟢 最低底价' : '🟢 Exact Lowest eBay Listing Floor') :
+                (language === 'zh-CN' ? '🟣 最高售价' : '🟣 Exact Highest eBay Listing Ceiling')
               }
             </span>
           </div>
           <span className="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-slate-400 font-mono">
-            {currentConfig.capacities.length} Densities × {currentConfig.speeds.length} Frequencies
+            {currentConfig.capacities.length} {language === 'zh-CN' ? '种容量' : 'Densities'} × {currentConfig.speeds.length} {language === 'zh-CN' ? '种频率' : 'Frequencies'}
           </span>
         </div>
 
@@ -346,7 +364,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
             <thead>
               <tr className="bg-slate-950/90 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                 <th className="py-3 px-4 font-semibold w-32 border-r border-slate-800/80">
-                  Capacity
+                  {language === 'zh-CN' ? '内存容量' : 'Capacity'}
                 </th>
                 {currentConfig.speeds.map(speed => (
                   <th key={speed} className="py-3 px-4 font-semibold text-center border-r border-slate-800/60 last:border-r-0">
@@ -384,7 +402,9 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                       return (
                         <td key={speed} className="py-3 px-3 text-center border-r border-slate-800/40 last:border-r-0">
                           <div className="py-4 px-2 bg-slate-950/40 rounded-lg border border-dashed border-slate-800/80 text-[11px] text-slate-500 flex flex-col items-center justify-center gap-1">
-                            <span className="text-slate-400 font-medium">No Active Listings</span>
+                            <span className="text-slate-400 font-medium">
+                              {language === 'zh-CN' ? '暂无在售记录' : 'No Active Listings'}
+                            </span>
                             <span className="text-[10px] text-slate-600">0 eBay items</span>
                           </div>
                         </td>
@@ -403,7 +423,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                               <div className="text-[9px] uppercase font-bold text-sky-400 tracking-wider flex items-center justify-between">
                                 <span className="flex items-center gap-1">
                                   <Scale className="w-2.5 h-2.5" />
-                                  Exact eBay Avg
+                                  {language === 'zh-CN' ? 'eBay 均价' : 'Exact eBay Avg'}
                                 </span>
                                 <span className="text-sky-300 font-mono">
                                   ${stats.avgPricePerGB.toFixed(2)}/GB
@@ -413,7 +433,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                                 ${stats.avgPrice.toFixed(2)}
                               </div>
                               <div className="text-[10px] text-slate-400 flex items-center justify-between pt-0.5 border-t border-slate-800">
-                                <span>Spread:</span>
+                                <span>{language === 'zh-CN' ? '价差:' : 'Spread:'}</span>
                                 <strong className="text-amber-400 font-mono">+${stats.spread.toFixed(2)}</strong>
                               </div>
                             </div>
@@ -425,7 +445,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                               <div className="flex items-center justify-between gap-1">
                                 <div>
                                   <div className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider">
-                                    Lowest eBay
+                                    {language === 'zh-CN' ? '最低底价' : 'Lowest eBay'}
                                   </div>
                                   <div className="text-base font-bold text-emerald-400 font-mono">
                                     ${stats.minPrice.toFixed(2)}
@@ -433,7 +453,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                                 </div>
                                 <div className="text-right">
                                   <div className="text-[9px] uppercase font-bold text-purple-400 tracking-wider">
-                                    Highest eBay
+                                    {language === 'zh-CN' ? '最高高价' : 'Highest eBay'}
                                   </div>
                                   <div className="text-base font-bold text-purple-300 font-mono">
                                     ${stats.maxPrice.toFixed(2)}
@@ -443,10 +463,10 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
 
                               <div className="pt-1.5 flex items-center justify-between text-[10px] font-mono border-t border-slate-800/80">
                                 <span className="text-sky-300">
-                                  eBay Avg: <strong>${stats.avgPrice.toFixed(2)}</strong>
+                                  {language === 'zh-CN' ? '均价:' : 'eBay Avg:'} <strong>${stats.avgPrice.toFixed(2)}</strong>
                                 </span>
                                 <span className="text-slate-400">
-                                  Spread: +${stats.spread.toFixed(2)}
+                                  {language === 'zh-CN' ? '差价' : 'Spread'}: +${stats.spread.toFixed(2)}
                                 </span>
                               </div>
                             </div>
@@ -456,14 +476,14 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                           {displayMode === 'lowest' && (
                             <div className="space-y-1">
                               <div className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider flex items-center justify-between">
-                                <span>Exact Lowest Floor</span>
+                                <span>{language === 'zh-CN' ? '最低底价' : 'Exact Lowest Floor'}</span>
                                 <span className="text-emerald-400 font-mono">${stats.minPricePerGB.toFixed(2)}/GB</span>
                               </div>
                               <div className="text-lg font-bold text-emerald-400 font-mono">
                                 ${stats.minPrice.toFixed(2)}
                               </div>
                               <div className="text-[10px] text-slate-400 truncate" title={stats.lowestListing?.title || 'eBay Active Listing'}>
-                                {stats.lowestListing ? `${stats.lowestListing.vendor} (Lot of ${stats.lowestListing.lotQuantity})` : 'eBay Active Listing'}
+                                {stats.lowestListing ? `${stats.lowestListing.vendor} (${language === 'zh-CN' ? `批量 ${stats.lowestListing.lotQuantity} 根` : `Lot of ${stats.lowestListing.lotQuantity}`})` : 'eBay Active Listing'}
                               </div>
                             </div>
                           )}
@@ -472,7 +492,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                           {displayMode === 'highest' && (
                             <div className="space-y-1">
                               <div className="text-[9px] uppercase font-bold text-purple-400 tracking-wider flex items-center justify-between">
-                                <span>Exact Highest Ceiling</span>
+                                <span>{language === 'zh-CN' ? '最高售价' : 'Exact Highest Ceiling'}</span>
                                 <span className="text-purple-300 font-mono">${stats.maxPricePerGB.toFixed(2)}/GB</span>
                               </div>
                               <div className="text-lg font-bold text-purple-300 font-mono">
@@ -488,10 +508,10 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                           <div className="mt-2 pt-2 border-t border-slate-800 space-y-0.5 text-[11px]">
                             <div className="flex items-center justify-between text-slate-400">
                               <span className="font-medium truncate max-w-[110px] text-slate-300" title={stats.vendors.join(', ')}>
-                                {stats.vendors.length > 0 ? stats.vendors.join(', ') : 'eBay Verified'}
+                                {stats.vendors.length > 0 ? stats.vendors.join(', ') : (language === 'zh-CN' ? '已核验' : 'eBay Verified')}
                               </span>
                               <span className="text-[10px] text-slate-500 font-mono">
-                                {stats.count} recs
+                                {stats.count} {language === 'zh-CN' ? '条' : 'recs'}
                               </span>
                             </div>
 
@@ -515,7 +535,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
                               className="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
                             >
                               <Filter className="w-2.5 h-2.5" />
-                              View ({stats.count})
+                              {language === 'zh-CN' ? '查看' : 'View'} ({stats.count})
                             </button>
                           </div>
                         </div>
@@ -533,20 +553,20 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
           <div className="flex flex-wrap items-center gap-4">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-              <strong className="text-slate-200">Lowest Floor:</strong> Exact lowest active listing price on eBay
+              <strong className="text-slate-200">{language === 'zh-CN' ? '最低底价:' : 'Lowest Floor:'}</strong> {language === 'zh-CN' ? 'eBay 上真实最低挂牌价' : 'Exact lowest active listing price on eBay'}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
-              <strong className="text-slate-200">Highest Ceiling:</strong> Exact highest active listing price on eBay
+              <strong className="text-slate-200">{language === 'zh-CN' ? '最高售价:' : 'Highest Ceiling:'}</strong> {language === 'zh-CN' ? 'eBay 上真实最高挂牌价' : 'Exact highest active listing price on eBay'}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full bg-sky-400"></span>
-              <strong className="text-slate-200">eBay Avg:</strong> Normalized mean price across active listings
+              <strong className="text-slate-200">{language === 'zh-CN' ? 'eBay 均价:' : 'eBay Avg:'}</strong> {language === 'zh-CN' ? '在售记录标准算术平均价' : 'Normalized mean price across active listings'}
             </span>
           </div>
 
           <div className="text-slate-500">
-            Click any cell to filter and inspect individual vendor listings.
+            {language === 'zh-CN' ? '点击任意单元格即可按该规格筛选并查看具体供应商与商品列表。' : 'Click any cell to filter and inspect individual vendor listings.'}
           </div>
         </div>
       </div>

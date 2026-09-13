@@ -12,7 +12,9 @@ import { MARKET_TRENDS_DATA } from './data/marketTrendsData';
 import { RamListing, MemoryGeneration, MarketTrend } from './types';
 import { SupportedTimezone, formatToTimezone } from './utils/timeFormat';
 import { detectModuleType, extractMemoryRank } from './utils/memoryClassification';
+import { calculateTrendsFromSnapshots } from './utils/trendCalculator';
 import { Server, ArrowRight, Clock, Calendar, CheckCircle2, RefreshCw, Activity, Zap } from 'lucide-react';
+import { useLanguage } from './context/LanguageContext';
 
 const normalizeListing = (l: RamListing): RamListing => ({
   ...l,
@@ -21,12 +23,16 @@ const normalizeListing = (l: RamListing): RamListing => ({
 });
 
 export default function App() {
+  const { language, t } = useLanguage();
   const [activeTab, setActiveTab] = useState<'matrix' | 'listings' | 'curated' | 'trends'>('matrix');
   const [liveEbayListings, setLiveEbayListings] = useState<RamListing[]>(() => INITIAL_EBAY_LISTINGS.map(normalizeListing));
   const [curatedListings, setCuratedListings] = useState<RamListing[]>(() => INITIAL_CURATED_LISTINGS.map(normalizeListing));
   const [metadata, setMetadata] = useState<ResearchMetadata>(CURRENT_RESEARCH_METADATA);
   const [trends, setTrends] = useState<MarketTrend[]>(MARKET_TRENDS_DATA);
-  const [curatedTrends, setCuratedTrends] = useState<MarketTrend[]>([]);
+  const [curatedTrends, setCuratedTrends] = useState<MarketTrend[]>(() => 
+    calculateTrendsFromSnapshots(INITIAL_CURATED_LISTINGS.map(normalizeListing), [])
+  );
+  const [historicalSnapshots, setHistoricalSnapshots] = useState<any[]>([]);
   const [cronInfo, setCronInfo] = useState<any>(DEFAULT_CRON_INFO);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedGeneration, setSelectedGeneration] = useState<MemoryGeneration | 'ALL'>('ALL');
@@ -73,7 +79,6 @@ export default function App() {
   // Fetch static market data from GitHub Pages host on load
   const fetchMarketData = async () => {
     try {
-      // Add timestamp query and no-store to ensure latest version is fetched without browser caching
       const headers = {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         'Pragma': 'no-cache',
@@ -87,16 +92,20 @@ export default function App() {
       if (curatedRes && curatedRes.ok) {
         const curatedData = await curatedRes.json();
         if (curatedData.success) {
-          if (Array.isArray(curatedData.curatedListings) && curatedData.curatedListings.length > 0) {
-            setCuratedListings(curatedData.curatedListings.map(normalizeListing));
-          } else {
-            setCuratedListings(INITIAL_CURATED_LISTINGS.map(normalizeListing));
-          }
+          const loadedListings = (Array.isArray(curatedData.curatedListings) && curatedData.curatedListings.length > 0)
+            ? curatedData.curatedListings.map(normalizeListing)
+            : INITIAL_CURATED_LISTINGS.map(normalizeListing);
+          setCuratedListings(loadedListings);
+
           if (Array.isArray(curatedData.trends) && curatedData.trends.length > 0) {
             setCuratedTrends(curatedData.trends);
+          } else if (Array.isArray(curatedData.dailySnapshots) && curatedData.dailySnapshots.length > 0) {
+            const computedTrends = calculateTrendsFromSnapshots(loadedListings, curatedData.dailySnapshots);
+            setCuratedTrends(computedTrends);
           } else {
-            setCuratedTrends([]);
+            setCuratedTrends(calculateTrendsFromSnapshots(loadedListings, []));
           }
+
           if (curatedData.metadata) {
             setMetadata(prev => ({ ...prev, ...curatedData.metadata }));
           }
@@ -113,6 +122,9 @@ export default function App() {
           }
           if (Array.isArray(ebayData.trends) && ebayData.trends.length > 0) {
             setTrends(ebayData.trends);
+          }
+          if (Array.isArray(ebayData.historicalSnapshots) && ebayData.historicalSnapshots.length > 0) {
+            setHistoricalSnapshots(ebayData.historicalSnapshots);
           }
           if (ebayData.cronInfo) {
             setCronInfo(ebayData.cronInfo);
@@ -135,8 +147,6 @@ export default function App() {
   const handleTriggerRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // In a static GitHub Pages environment, we can't trigger a backend script directly from the client.
-      // We simulate a fetch from the latest static file instead, or you can trigger a GitHub Dispatch event if a PAT is provided.
       await new Promise(resolve => setTimeout(resolve, 800));
       await fetchMarketData();
     } catch (err) {
@@ -184,17 +194,17 @@ export default function App() {
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-white tracking-tight">
-                        ECC RDIMM <span className="text-indigo-400">Market Intelligence Index</span>
+                        ECC RDIMM <span className="text-indigo-400">{language === 'zh-CN' ? '市场行情智能指数' : 'Market Intelligence Index'}</span>
                       </h2>
                       <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold mt-0.5">
-                        ITAD Enterprise Hardware Secondary Pricing & Valuation Benchmarks
+                        {language === 'zh-CN' ? 'ITAD 企业级硬件二级市场定价与估值基准' : 'ITAD Enterprise Hardware Secondary Pricing & Valuation Benchmarks'}
                       </p>
                     </div>
                   </div>
                   <div className="hidden sm:flex bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                     <span className="text-xs font-bold text-indigo-300 tracking-wider font-mono">
-                      {metadata.researchQuarter} REPORT
+                      {metadata.researchQuarter} {language === 'zh-CN' ? '报告' : 'REPORT'}
                     </span>
                   </div>
                 </div>
@@ -203,31 +213,31 @@ export default function App() {
                   <div className="flex items-center gap-2 text-slate-300 font-mono text-[11px] bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800">
                     <Clock className="w-4 h-4 text-amber-400 shrink-0" />
                     <span>
-                      Research Updated: <strong className="text-white">{formatToTimezone(latestTimestamp, selectedTimezone).dayOfWeek}, {formatToTimezone(latestTimestamp, selectedTimezone).dateString}</strong> at <strong className="text-amber-300">{formatToTimezone(latestTimestamp, selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(latestTimestamp, selectedTimezone).tzOffsetLabel} {formatToTimezone(latestTimestamp, selectedTimezone).tzBadge})</span>
+                      {language === 'zh-CN' ? '调研更新: ' : 'Research Updated: '}<strong className="text-white">{formatToTimezone(latestTimestamp, selectedTimezone).dayOfWeek}, {formatToTimezone(latestTimestamp, selectedTimezone).dateString}</strong> {language === 'zh-CN' ? '时间' : 'at'} <strong className="text-amber-300">{formatToTimezone(latestTimestamp, selectedTimezone).timeString}</strong> <span className="text-slate-500">({formatToTimezone(latestTimestamp, selectedTimezone).tzOffsetLabel} {formatToTimezone(latestTimestamp, selectedTimezone).tzBadge})</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <button
                       onClick={() => setActiveTab('listings')}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                      Live eBay ({liveEbayListings.length})
+                      {language === 'zh-CN' ? `eBay 实时数据 (${liveEbayListings.length})` : `Live eBay (${liveEbayListings.length})`}
                       <ArrowRight className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => setActiveTab('curated')}
-                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
                     >
-                      Curated Benchmarks ({curatedListings.length})
+                      {language === 'zh-CN' ? `精选基准目录 (${curatedListings.length})` : `Curated Benchmarks (${curatedListings.length})`}
                       <ArrowRight className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => setIsSchedulerOpen(true)}
-                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 border border-slate-700"
+                      className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 border border-slate-700 cursor-pointer"
                     >
                       <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                      Cron Status
+                      {language === 'zh-CN' ? 'Cron 定时任务状态' : 'Cron Status'}
                     </button>
                   </div>
                 </div>
@@ -237,16 +247,18 @@ export default function App() {
               <div className="md:col-span-4 bg-indigo-600 border border-indigo-500/60 rounded-xl p-5 flex flex-col justify-between text-white shadow-sm">
                 <div>
                   <div className="flex justify-between items-center text-xs font-bold uppercase tracking-widest opacity-80 mb-2">
-                    <span>Automated Backend Engine</span>
+                    <span>{language === 'zh-CN' ? '自动化后端引擎' : 'Automated Backend Engine'}</span>
                     <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] flex items-center gap-1 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span> 08:00 AM UTC+8 DAILY
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span> {language === 'zh-CN' ? '每日 08:00 AM (UTC+8)' : '08:00 AM UTC+8 DAILY'}
                     </span>
                   </div>
                   <div className="text-2xl font-mono font-bold">
-                    36 SKUs Audited
+                    {language === 'zh-CN' ? '已审计 36 个规格' : '36 SKUs Audited'}
                   </div>
                   <div className="text-xs text-indigo-100 mt-0.5">
-                    {liveEbayListings.length} Live Items • {curatedListings.length} Benchmark SKUs
+                    {language === 'zh-CN' 
+                      ? `${liveEbayListings.length} 条实时在线商品 • ${curatedListings.length} 个基准规格`
+                      : `${liveEbayListings.length} Live Items • ${curatedListings.length} Benchmark SKUs`}
                   </div>
                 </div>
                 <div className="mt-3 pt-2 border-t border-indigo-400/40 flex justify-between items-center text-[11px] opacity-90 font-mono">
@@ -294,6 +306,7 @@ export default function App() {
           <MarketTrends
             metadata={metadata}
             trends={trends}
+            historicalSnapshots={historicalSnapshots}
             selectedTimezone={selectedTimezone}
             lastUpdatedTimestamp={latestTimestamp}
             onSelectSpec={(gen, cap, speed) => {
@@ -312,28 +325,28 @@ export default function App() {
               ECC
             </div>
             <span className="text-slate-300">
-              <strong className="text-white">ECC RDIMM Market Intelligence</strong> • Comprehensive ITAD Valuation Benchmarks
+              <strong className="text-white">ECC RDIMM Market Intelligence</strong> • {language === 'zh-CN' ? '全方位 ITAD 硬件估值基准' : 'Comprehensive ITAD Valuation Benchmarks'}
             </span>
           </div>
 
           <div className="flex items-center gap-4 text-slate-400 text-[11px]">
             <span className="flex items-center gap-1 font-mono">
               <Clock className="w-3.5 h-3.5 text-amber-400" />
-              Research Update: <strong className="text-slate-200">{formatToTimezone(latestTimestamp, selectedTimezone).fullString}</strong>
+              <span>{language === 'zh-CN' ? '调研更新: ' : 'Research Update: '}<strong className="text-slate-200">{formatToTimezone(latestTimestamp, selectedTimezone).fullString}</strong></span>
             </span>
             <span>•</span>
             <button
               onClick={() => setIsSchedulerOpen(true)}
-              className="text-emerald-400 hover:text-emerald-300 underline font-medium"
+              className="text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
             >
-              8:00 AM UTC+8 Cron Status
+              {language === 'zh-CN' ? '8:00 AM UTC+8 定时任务状态' : '8:00 AM UTC+8 Cron Status'}
             </button>
             <span>•</span>
             <button
               onClick={() => setIsSpecsGuideOpen(true)}
-              className="text-indigo-400 hover:text-indigo-300 underline"
+              className="text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
             >
-              Compatibility Guide
+              {language === 'zh-CN' ? '规格与兼容性指南' : 'Compatibility Guide'}
             </button>
           </div>
         </div>
