@@ -54,7 +54,7 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
   };
 
   const DDR5_MONO_CONFIG = {
-    capacities: [16, 32, 48, 64, 96],
+    capacities: [16, 32, 48, 64, 96, 128],
     speeds: [4800, 5600, 6400, 7200],
     speedLabels: {
       4800: '4800 MT/s (PC5-38400)',
@@ -106,9 +106,20 @@ export const MarketMatrix: React.FC<MarketMatrixProps> = ({ listings, trends, on
     const trendsSource = trends && trends.length > 0 ? trends : MARKET_TRENDS_DATA;
     const trendRecord = trendsSource.find(t => {
       if (t.generation !== gen || t.capacityGB !== cap || t.speedMTs !== speed) return false;
-      const is3dsTrend = t.analysisNotes.toLowerCase().includes('3ds');
-      if (is3dsTab && !is3dsTrend && cap >= 128) return false;
-      if (isMonoTab && is3dsTrend && cap >= 128) return false;
+      const is3dsTrend = t.generation === 'DDR5' && (
+        t.is3DS === true || 
+        t.moduleType === '3DS RDIMM' || 
+        t.technology === '3DS TSV' ||
+        t.capacityGB === 256 ||
+        (t.is3DS !== false && t.technology !== 'Monolithic' && (t.moduleType !== 'RDIMM' || t.is3DS === true) && t.capacityGB === 128 && (
+          (/\b3ds\b/i.test(t.analysisNotes || '') && !/\bnon[- ]3ds\b/i.test(t.analysisNotes || '')) ||
+          (/\b3ds\b/i.test(t.ebayHighestSoldLotInfo || '') && !/\bnon[- ]3ds\b/i.test(t.ebayHighestSoldLotInfo || '')) ||
+          /\btsv\b/i.test(t.analysisNotes || '') ||
+          /\btsv\b/i.test(t.ebayHighestSoldLotInfo || '')
+        ))
+      );
+      if (is3dsTab && !is3dsTrend) return false;
+      if (isMonoTab && is3dsTrend) return false;
       return true;
     });
 

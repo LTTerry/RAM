@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { 
   TrendingDown, 
   TrendingUp, 
@@ -10,7 +10,8 @@ import {
   DollarSign, 
   Scale, 
   ArrowUpRight,
-  Activity
+  Activity,
+  SlidersHorizontal
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -42,6 +43,13 @@ interface MarketTrendsProps {
 type ChartMetric = 'price' | 'pricePerGB';
 type ChartTimeframe = 'daily' | '90day';
 
+interface SkuGroup {
+  key: string;
+  label: string;
+  labelZh: string;
+  items: MarketTrend[];
+}
+
 export const MarketTrends: React.FC<MarketTrendsProps> = ({
   metadata = CURRENT_RESEARCH_METADATA,
   trends = MARKET_TRENDS_DATA,
@@ -56,13 +64,63 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
   const [chartTimeframe, setChartTimeframe] = useState<ChartTimeframe>('daily');
   const [selectedSkuKey, setSelectedSkuKey] = useState<string | null>(null);
   const [isFormulaModalOpen, setIsFormulaModalOpen] = useState(false);
+  const chartSectionRef = useRef<HTMLDivElement>(null);
 
-  const isDDR5_3DS = (t: MarketTrend) => t.generation === 'DDR5' && (t.capacityGB === 256 || (t.capacityGB === 128 && (t.analysisNotes || '').toLowerCase().includes('3ds')));
+  const isDDR5_3DS = (t: MarketTrend) => {
+    if (t.generation !== 'DDR5') return false;
+    if (t.is3DS === false || t.technology === 'Monolithic' || (t.moduleType === 'RDIMM' && t.is3DS !== true)) {
+      if (t.capacityGB !== 256 && t.is3DS !== true && t.technology !== '3DS TSV') return false;
+    }
+    if (t.is3DS === true || t.moduleType === '3DS RDIMM' || t.technology === '3DS TSV' || t.capacityGB === 256) {
+      return true;
+    }
+    const notes = (t.analysisNotes || '').toLowerCase();
+    const sold = (t.ebayHighestSoldLotInfo || '').toLowerCase();
+    const isExplicit3DS = (/\b3ds\b/i.test(notes) && !/\bnon[- ]3ds\b/i.test(notes)) ||
+                          (/\b3ds\b/i.test(sold) && !/\bnon[- ]3ds\b/i.test(sold)) ||
+                          /\btsv\b/i.test(notes) || /\btsv\b/i.test(sold);
+    return isExplicit3DS;
+  };
   const isDDR5_MONO = (t: MarketTrend) => t.generation === 'DDR5' && !isDDR5_3DS(t);
+
+  const getSkuKey = (t: MarketTrend) => {
+    const subtype = t.generation === 'DDR5' ? (isDDR5_3DS(t) ? '-3ds' : '-mono') : '';
+    return `${t.generation}-${t.capacityGB}-${t.speedMTs}${subtype}`;
+  };
+
+  // Group trends by generation for the SKU selector dropdown
+  const groupedTrends = useMemo<SkuGroup[]>(() => {
+    const ddr3: MarketTrend[] = [];
+    const ddr4: MarketTrend[] = [];
+    const ddr5Mono: MarketTrend[] = [];
+    const ddr53ds: MarketTrend[] = [];
+
+    trends.forEach(t => {
+      if (t.generation === 'DDR3') ddr3.push(t);
+      else if (t.generation === 'DDR4') ddr4.push(t);
+      else if (isDDR5_3DS(t)) ddr53ds.push(t);
+      else ddr5Mono.push(t);
+    });
+
+    return [
+      { key: 'DDR3', label: 'DDR3 Registered ECC', labelZh: 'DDR3 寄存式 ECC', items: ddr3 },
+      { key: 'DDR4', label: 'DDR4 Registered ECC', labelZh: 'DDR4 寄存式 ECC', items: ddr4 },
+      { key: 'DDR5_MONO', label: 'DDR5 Monolithic', labelZh: 'DDR5 单芯片 (Mono 2Rx4)', items: ddr5Mono },
+      { key: 'DDR5_3DS', label: 'DDR5 3DS High-Density', labelZh: 'DDR5 3DS 高密度堆叠', items: ddr53ds },
+    ];
+  }, [trends]);
+
+  // Handler for card click with automatic smooth scroll to chart
+  const handleSelectSku = (skuKey: string) => {
+    setSelectedSkuKey(skuKey);
+    if (chartSectionRef.current) {
+      chartSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Helper to extract chronological daily snapshot prices for any SKU
   const getSkuDailyHistory = useMemo(() => {
-    return (gen: string, cap: number, speed: number) => {
+    return (gen: string, cap: number, speed: number, is3dsCheck?: boolean) => {
       if (!historicalSnapshots || historicalSnapshots.length === 0) return [];
       
       const byDate = new Map<string, {
@@ -79,7 +137,14 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
         const snapDate = snap.date ? snap.date.split('T')[0] : '';
         if (!snapDate) continue;
         const match = (snap.trends || []).find(
-          (t: any) => t.generation === gen && t.capacityGB === cap && t.speedMTs === speed
+          (t: any) => {
+            if (t.generation !== gen || t.capacityGB !== cap || t.speedMTs !== speed) return false;
+            if (gen === 'DDR5' && is3dsCheck !== undefined) {
+              const itemIs3ds = isDDR5_3DS(t);
+              if (itemIs3ds !== is3dsCheck) return false;
+            }
+            return true;
+          }
         );
         if (match && typeof match.currentAvgPrice === 'number' && match.currentAvgPrice > 0) {
           byDate.set(snapDate, {
@@ -110,7 +175,7 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
   // Default selected SKU for the deep-dive chart
   const activeSelectedTrend = useMemo(() => {
     if (selectedSkuKey) {
-      const found = trends.find(t => `${t.generation}-${t.capacityGB}-${t.speedMTs}` === selectedSkuKey);
+      const found = trends.find(t => getSkuKey(t) === selectedSkuKey || `${t.generation}-${t.capacityGB}-${t.speedMTs}` === selectedSkuKey);
       if (found) return found;
     }
     return filteredTrends.length > 0 ? filteredTrends[0] : trends[0];
@@ -122,7 +187,8 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
     return getSkuDailyHistory(
       activeSelectedTrend.generation,
       activeSelectedTrend.capacityGB,
-      activeSelectedTrend.speedMTs
+      activeSelectedTrend.speedMTs,
+      isDDR5_3DS(activeSelectedTrend)
     );
   }, [activeSelectedTrend, getSkuDailyHistory]);
 
@@ -398,47 +464,91 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
       </div>
 
       {/* Focused Active SKU Detailed Area Chart Banner */}
-      <div className="bg-slate-900/50 rounded-xl border border-slate-800 p-5 shadow-sm space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div>
-            <div className="flex items-center gap-2">
+      <div 
+        ref={chartSectionRef}
+        id="interactive-market-chart"
+        className="bg-slate-900/50 rounded-xl border border-slate-800 p-5 shadow-sm space-y-4 scroll-mt-28 transition-all"
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
               <span className={`px-2 py-0.5 rounded font-bold text-[10px] font-mono uppercase ${
                 activeSelectedTrend.generation === 'DDR3' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
                 activeSelectedTrend.generation === 'DDR4' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
+                isDDR5_3DS(activeSelectedTrend) ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
                 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
               }`}>
                 {activeSelectedTrend.generation === 'DDR5' 
-                  ? (isDDR5_3DS(activeSelectedTrend) ? 'DDR5 (3DS)' : 'DDR5 (Mono)') 
+                  ? (isDDR5_3DS(activeSelectedTrend) ? 'DDR5 (3DS TSV)' : 'DDR5 (Mono 2Rx4)') 
                   : activeSelectedTrend.generation}
               </span>
               <h3 className="text-base font-bold text-white">
-                {activeSelectedTrend.capacityGB}GB {activeSelectedTrend.speedMTs} MT/s {language === 'zh-CN' ? '历史走势' : 'Historical Trajectory'}
+                {activeSelectedTrend.capacityGB}GB {activeSelectedTrend.speedMTs} MT/s {activeSelectedTrend.generation === 'DDR5' ? (isDDR5_3DS(activeSelectedTrend) ? '3DS' : 'Monolithic') : ''} {language === 'zh-CN' ? '历史走势' : 'Historical Trajectory'}
               </h3>
             </div>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-400">
               {activeSelectedTrend.analysisNotes}
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400">
-                {language === 'zh-CN' ? '90天动量' : '90-Day Momentum'}
-              </div>
-              <div className={`text-base font-bold font-mono ${
-                activeSelectedTrend.threeMonthChangePercent > 0 ? 'text-rose-400' :
-                activeSelectedTrend.threeMonthChangePercent < 0 ? 'text-emerald-400' : 'text-slate-300'
-              }`}>
-                {activeSelectedTrend.threeMonthChangePercent > 0 ? `+${activeSelectedTrend.threeMonthChangePercent}%` : `${activeSelectedTrend.threeMonthChangePercent}%`}
-              </div>
+          <div className="flex flex-wrap items-center gap-3.5">
+            {/* SKU Dropdown Selector */}
+            <div className="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-700/80 shadow-xs">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <label htmlFor="sku-dropdown-selector" className="text-[11px] text-slate-300 font-medium whitespace-nowrap">
+                {language === 'zh-CN' ? '选择规格:' : 'Choose SKU:'}
+              </label>
+              <select
+                id="sku-dropdown-selector"
+                value={getSkuKey(activeSelectedTrend)}
+                onChange={(e) => setSelectedSkuKey(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-sky-300 hover:text-white font-mono text-xs rounded-md px-2.5 py-1 focus:outline-none focus:ring-1 focus:ring-sky-500 cursor-pointer max-w-[220px] sm:max-w-[300px] truncate"
+                title={language === 'zh-CN' ? '选择想要查看图表走势的内存规格' : 'Select a memory SKU to view its historical chart'}
+              >
+                {groupedTrends.map((group) => {
+                  if (group.items.length === 0) return null;
+                  return (
+                    <optgroup
+                      key={group.key}
+                      label={language === 'zh-CN' ? group.labelZh : group.label}
+                      className="bg-slate-900 text-slate-400 font-semibold font-sans"
+                    >
+                      {group.items.map(t => {
+                        const key = getSkuKey(t);
+                        const changeSign = t.threeMonthChangePercent > 0 ? `+${t.threeMonthChangePercent}%` : `${t.threeMonthChangePercent}%`;
+                        const typeSuffix = t.generation === 'DDR5' ? (isDDR5_3DS(t) ? ' (3DS TSV)' : ' (Mono 2Rx4)') : '';
+                        return (
+                          <option key={key} value={key} className="bg-slate-950 text-white font-mono py-0.5">
+                            {t.generation} {t.capacityGB}GB {t.speedMTs} MT/s{typeSuffix} — ${t.currentAvgPrice.toFixed(2)} ({changeSign})
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  );
+                })}
+              </select>
             </div>
-            <div className="h-8 w-px bg-slate-800"></div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400">
-                {language === 'zh-CN' ? '当前 eBay 均价' : 'Current eBay Avg'}
+
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-[10px] uppercase font-bold text-slate-400">
+                  {language === 'zh-CN' ? '90天动量' : '90-Day Momentum'}
+                </div>
+                <div className={`text-base font-bold font-mono ${
+                  activeSelectedTrend.threeMonthChangePercent > 0 ? 'text-rose-400' :
+                  activeSelectedTrend.threeMonthChangePercent < 0 ? 'text-emerald-400' : 'text-slate-300'
+                }`}>
+                  {activeSelectedTrend.threeMonthChangePercent > 0 ? `+${activeSelectedTrend.threeMonthChangePercent}%` : `${activeSelectedTrend.threeMonthChangePercent}%`}
+                </div>
               </div>
-              <div className="text-base font-bold font-mono text-sky-300">
-                ${activeSelectedTrend.currentAvgPrice.toFixed(2)}
+              <div className="h-8 w-px bg-slate-800"></div>
+              <div className="text-right">
+                <div className="text-[10px] uppercase font-bold text-slate-400">
+                  {language === 'zh-CN' ? '当前 eBay 均价' : 'Current eBay Avg'}
+                </div>
+                <div className="text-base font-bold font-mono text-sky-300">
+                  ${activeSelectedTrend.currentAvgPrice.toFixed(2)}
+                </div>
               </div>
             </div>
           </div>
@@ -514,11 +624,11 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
           {filteredTrends.map((t, idx) => {
             const isDown = t.trendDirection === 'down';
             const isUp = t.trendDirection === 'up';
-            const skuKey = `${t.generation}-${t.capacityGB}-${t.speedMTs}`;
-            const isSelected = activeSelectedTrend && `${activeSelectedTrend.generation}-${activeSelectedTrend.capacityGB}-${activeSelectedTrend.speedMTs}` === skuKey;
+            const skuKey = getSkuKey(t);
+            const isSelected = activeSelectedTrend && getSkuKey(activeSelectedTrend) === skuKey;
 
             // Extract real daily curve for this SKU if available in snapshots
-            const dailyHistory = getSkuDailyHistory(t.generation, t.capacityGB, t.speedMTs);
+            const dailyHistory = getSkuDailyHistory(t.generation, t.capacityGB, t.speedMTs, isDDR5_3DS(t));
             const sparkData = dailyHistory.length >= 2
               ? dailyHistory.map(p => ({ val: p.price, date: p.date }))
               : [
@@ -534,7 +644,7 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
             return (
               <div
                 key={idx}
-                onClick={() => setSelectedSkuKey(skuKey)}
+                onClick={() => handleSelectSku(skuKey)}
                 className={`p-4 rounded-xl border transition-all cursor-pointer bg-slate-900/60 hover:bg-slate-850 flex flex-col justify-between space-y-3 shadow-xs ${
                   isSelected
                     ? 'border-sky-500 ring-1 ring-sky-500/50 bg-slate-850'
@@ -548,6 +658,7 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
                       <span className={`px-2 py-0.5 rounded font-bold text-[9px] font-mono uppercase ${
                         t.generation === 'DDR3' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
                         t.generation === 'DDR4' ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' :
+                        isDDR5_3DS(t) ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
                         'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                       }`}>
                         {t.generation === 'DDR5' ? (isDDR5_3DS(t) ? 'DDR5 3DS' : 'DDR5 Mono') : t.generation}

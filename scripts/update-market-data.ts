@@ -895,10 +895,19 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
     dailySnapshots: curatedSnapshots,
   };
 
+  // Deduplicate live eBay listings by unique ID / URL to prevent duplicate keys
+  const seenListingIds = new Set<string>();
+  const deduplicatedLiveEbayListings = allLiveEbayListings.filter(item => {
+    const key = item.id || item.sourceUrl || `${item.title}-${item.pricePerUnit}`;
+    if (seenListingIds.has(key)) return false;
+    seenListingIds.add(key);
+    return true;
+  });
+
   const ebayPayload = {
     success: true,
     description: 'Live eBay API Research & 3-Month Market Trends ("Exact eBay Active Listings & Market Spread")',
-    ebayListings: allLiveEbayListings,
+    ebayListings: deduplicatedLiveEbayListings,
     ebaySold: serverEbaySold,
     trends: serverTrends,
     cronInfo: {
@@ -910,7 +919,7 @@ Return ONLY a valid JSON object with the following keys, containing only numbers
       storageType: 'Static JSON on GitHub Pages ($0 Hosting/DB Cost)',
       totalSkusAudited: serverTrends.length,
       ebayRecordsSuccess: skuSuccessCount,
-      totalLiveEbayListings: allLiveEbayListings.length,
+      totalLiveEbayListings: deduplicatedLiveEbayListings.length,
       totalCuratedListings: serverListings.length,
       jsonUpdated: true,
       dataSource: usedEbay ? 'eBay Production API (Realistic Search)' : 'Gemini Fallback Search',

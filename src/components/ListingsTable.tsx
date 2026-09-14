@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Search, 
   Download, 
@@ -20,7 +20,7 @@ import {
   Clock, 
   Calendar 
 } from 'lucide-react';
-import { RamListing, MemoryGeneration, MarketTrend } from '../types';
+import { RamListing, MemoryGeneration, MarketTrend, GenerationFilter } from '../types';
 import { CURRENT_RESEARCH_METADATA, ResearchMetadata } from '../data/researchMetadata';
 import { SupportedTimezone, formatToTimezone } from '../utils/timeFormat';
 import { detectModuleType, extractMemoryRank } from '../utils/memoryClassification';
@@ -28,8 +28,8 @@ import { useLanguage } from '../context/LanguageContext';
 
 interface ListingsTableProps {
   listings: RamListing[];
-  selectedGeneration: MemoryGeneration | 'ALL';
-  onFilterGeneration: (gen: MemoryGeneration | 'ALL') => void;
+  selectedGeneration: GenerationFilter;
+  onFilterGeneration: (gen: GenerationFilter) => void;
   metadata?: ResearchMetadata;
   catalogType?: 'liveEbay' | 'curatedBenchmark';
   trends?: MarketTrend[];
@@ -111,7 +111,7 @@ const OneWeekTrendBadge = ({ trend }: { trend: MarketTrend }) => {
 
 export const ListingsTable: React.FC<ListingsTableProps> = ({
   listings,
-  selectedGeneration,
+  selectedGeneration = 'ALL',
   onFilterGeneration,
   metadata = CURRENT_RESEARCH_METADATA,
   catalogType = 'liveEbay',
@@ -120,6 +120,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   lastUpdatedTimestamp,
 }) => {
   const { language, t } = useLanguage();
+  const [activeGen, setActiveGen] = useState<GenerationFilter>(selectedGeneration || 'ALL');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCapacity, setSelectedCapacity] = useState<string>('ALL');
   const [selectedSpeed, setSelectedSpeed] = useState<string>('ALL');
@@ -129,6 +130,88 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
   const [sortField, setSortField] = useState<'pricePerUnit' | 'pricePerGB' | 'speedMTs' | 'capacityGB' | 'vendor'>('pricePerUnit');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Synchronize activeGen when parent selectedGeneration prop changes
+  useEffect(() => {
+    if (selectedGeneration !== undefined) {
+      setActiveGen(selectedGeneration);
+    }
+  }, [selectedGeneration]);
+
+  // Unified handler for switching generation
+  const handleSetGeneration = (newGen: GenerationFilter) => {
+    setActiveGen(newGen);
+    // Reset secondary filters to prevent invalid cross-generation filter combinations
+    setSelectedCapacity('ALL');
+    setSelectedSpeed('ALL');
+    if (onFilterGeneration) {
+      onFilterGeneration(newGen);
+    }
+  };
+
+  // Compute generation breakdown counts across the dataset
+  const genCounts = useMemo(() => {
+    let ddr3 = 0;
+    let ddr4 = 0;
+    let ddr5Mono = 0;
+    let ddr53ds = 0;
+    listings.forEach(item => {
+      const modType = detectModuleType(item.title, item.capacityGB, item.generation, item.moduleType);
+      const g = (item.generation || '').toUpperCase().trim();
+      if (g === 'DDR3') {
+        ddr3++;
+      } else if (g === 'DDR4') {
+        ddr4++;
+      } else if (g === 'DDR5') {
+        if (modType === '3DS RDIMM' || item.moduleType === '3DS RDIMM') {
+          ddr53ds++;
+        } else {
+          ddr5Mono++;
+        }
+      }
+    });
+    return {
+      ALL: listings.length,
+      DDR3: ddr3,
+      DDR4: ddr4,
+      DDR5_MONO: ddr5Mono,
+      DDR5_3DS: ddr53ds
+    };
+  }, [listings]);
+
+  // Compute unique capacities available
+  const capacityOptions = useMemo(() => {
+    const set = new Set<number>();
+    listings.forEach(l => {
+      const g = (l.generation || '').toUpperCase().trim();
+      if (
+        activeGen === 'ALL' ||
+        (activeGen === 'DDR5_MONO' && g === 'DDR5') ||
+        (activeGen === 'DDR5_3DS' && g === 'DDR5') ||
+        g === activeGen
+      ) {
+        if (l.capacityGB) set.add(l.capacityGB);
+      }
+    });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [listings, activeGen]);
+
+  // Compute unique speeds available
+  const speedOptions = useMemo(() => {
+    const set = new Set<number>();
+    listings.forEach(l => {
+      const g = (l.generation || '').toUpperCase().trim();
+      if (
+        activeGen === 'ALL' ||
+        (activeGen === 'DDR5_MONO' && g === 'DDR5') ||
+        (activeGen === 'DDR5_3DS' && g === 'DDR5') ||
+        g === activeGen
+      ) {
+        if (l.speedMTs) set.add(l.speedMTs);
+      }
+    });
+    return Array.from(set).sort((a, b) => a - b);
+  }, [listings, activeGen]);
 
   // Compute unique vendors in the dataset
   const vendorOptions = useMemo(() => {
@@ -162,35 +245,46 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
     return listings.filter(item => {
       const detectedModType = detectModuleType(item.title, item.capacityGB, item.generation, item.moduleType);
       const detectedRank = extractMemoryRank(item.title, item.capacityGB, item.generation, item.rank);
+      const itemGen = (item.generation || '').toUpperCase().trim();
 
-      // Generation filter
-      if (selectedGeneration !== 'ALL') {
-        if (selectedGeneration === 'DDR5_MONO') {
-          if (item.generation !== 'DDR5' || detectedModType === '3DS RDIMM') return false;
-        } else if (selectedGeneration === 'DDR5_3DS') {
-          if (item.generation !== 'DDR5' || detectedModType !== '3DS RDIMM') return false;
-        } else if (item.generation !== selectedGeneration) {
+      // 1. Generation filter (Strict matching)
+      if (activeGen && activeGen !== 'ALL') {
+        if (activeGen === 'DDR3') {
+          if (itemGen !== 'DDR3') return false;
+        } else if (activeGen === 'DDR4') {
+          if (itemGen !== 'DDR4') return false;
+        } else if (activeGen === 'DDR5') {
+          if (itemGen !== 'DDR5') return false;
+        } else if (activeGen === 'DDR5_MONO') {
+          if (itemGen !== 'DDR5') return false;
+          // DDR5 Monolithic: must not be 3DS TSV stacked
+          if (detectedModType === '3DS RDIMM' || item.moduleType === '3DS RDIMM') return false;
+        } else if (activeGen === 'DDR5_3DS') {
+          if (itemGen !== 'DDR5') return false;
+          // DDR5 3DS: must be 3DS TSV stacked
+          if (detectedModType !== '3DS RDIMM' && item.moduleType !== '3DS RDIMM') return false;
+        } else if (itemGen !== activeGen) {
           return false;
         }
       }
       
-      // Capacity filter
+      // 2. Capacity filter
       if (selectedCapacity !== 'ALL' && item.capacityGB !== Number(selectedCapacity)) {
         return false;
       }
-      // Speed filter
+      // 3. Speed filter
       if (selectedSpeed !== 'ALL' && item.speedMTs !== Number(selectedSpeed)) {
         return false;
       }
-      // Vendor filter
+      // 4. Vendor filter
       if (selectedVendor !== 'ALL' && item.vendor !== selectedVendor) {
         return false;
       }
-      // Bulk lot filter
+      // 5. Bulk lot filter
       if (onlyBulkLots && item.lotQuantity <= 1) {
         return false;
       }
-      // Lowest / Highest Price Tier Filter
+      // 6. Lowest / Highest Price Tier Filter
       const skuKey = `${item.generation}-${item.capacityGB}-${item.speedMTs}`;
       const bounds = skuPriceBounds.get(skuKey);
       if (priceTierFilter === 'LOWEST_ONLY') {
@@ -200,7 +294,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         if (bounds && item.pricePerUnit < bounds.max) return false;
       }
 
-      // Search keyword filter
+      // 7. Search keyword filter
       if (searchTerm.trim() !== '') {
         const query = searchTerm.toLowerCase();
         const matchTitle = item.title.toLowerCase().includes(query);
@@ -233,7 +327,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         return aVal < bVal ? 1 : -1;
       }
     });
-  }, [listings, selectedGeneration, selectedCapacity, selectedSpeed, selectedVendor, onlyBulkLots, priceTierFilter, searchTerm, sortField, sortDirection, skuPriceBounds]);
+  }, [listings, activeGen, selectedCapacity, selectedSpeed, selectedVendor, onlyBulkLots, priceTierFilter, searchTerm, sortField, sortDirection, skuPriceBounds]);
 
   // Overall statistics for current filtered view
   const currentViewStats = useMemo(() => {
@@ -513,88 +607,263 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
         </div>
 
         {/* Filters Row */}
-        <div className="mt-3 pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Price Tier Toggle */}
-            <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+        <div className="mt-3 pt-3 border-t border-slate-800 flex flex-col gap-3 text-xs">
+          {/* Top Row: Generation Segmented Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-slate-400 font-semibold text-[11px] mr-1">{language === 'zh-CN' ? '代际筛选:' : 'Generation:'}</span>
+              
               <button
-                onClick={() => setPriceTierFilter('ALL')}
-                className={`px-2.5 py-1 text-xs font-semibold rounded ${
-                  priceTierFilter === 'ALL'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-white'
+                type="button"
+                onClick={() => handleSetGeneration('ALL')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeGen === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-xs ring-1 ring-indigo-400'
+                    : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800 hover:bg-slate-900'
                 }`}
               >
-                {language === 'zh-CN' ? '全部价格' : 'All Prices'}
+                <span>{language === 'zh-CN' ? '全部代际' : 'All Gens'}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeGen === 'ALL' ? 'bg-indigo-700 text-white' : 'bg-slate-800 text-slate-400'
+                }`}>
+                  {genCounts.ALL}
+                </span>
               </button>
+
               <button
-                onClick={() => setPriceTierFilter('LOWEST_ONLY')}
-                className={`px-2.5 py-1 text-xs font-semibold rounded flex items-center gap-1 ${
-                  priceTierFilter === 'LOWEST_ONLY'
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-emerald-400'
+                type="button"
+                onClick={() => handleSetGeneration('DDR3')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeGen === 'DDR3'
+                    ? 'bg-amber-600 text-white shadow-xs ring-1 ring-amber-400'
+                    : 'bg-slate-950 text-amber-400 hover:text-amber-300 border border-slate-800 hover:bg-slate-900'
                 }`}
               >
-                <span>{language === 'zh-CN' ? '🟢 仅看最低 (底价)' : '🟢 Lowest (Floors)'}</span>
+                <span>DDR3</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeGen === 'DDR3' ? 'bg-amber-700 text-white' : 'bg-slate-800 text-amber-400/80'
+                }`}>
+                  {genCounts.DDR3}
+                </span>
               </button>
+
               <button
-                onClick={() => setPriceTierFilter('HIGHEST_ONLY')}
-                className={`px-2.5 py-1 text-xs font-semibold rounded flex items-center gap-1 ${
-                  priceTierFilter === 'HIGHEST_ONLY'
-                    ? 'bg-purple-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-purple-300'
+                type="button"
+                onClick={() => handleSetGeneration('DDR4')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeGen === 'DDR4'
+                    ? 'bg-sky-600 text-white shadow-xs ring-1 ring-sky-400'
+                    : 'bg-slate-950 text-sky-400 hover:text-sky-300 border border-slate-800 hover:bg-slate-900'
                 }`}
               >
-                <span>{language === 'zh-CN' ? '🟣 仅看最高 (高价)' : '🟣 Highest (Ceilings)'}</span>
+                <span>DDR4</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeGen === 'DDR4' ? 'bg-sky-700 text-white' : 'bg-slate-800 text-sky-400/80'
+                }`}>
+                  {genCounts.DDR4}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSetGeneration('DDR5_MONO')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeGen === 'DDR5_MONO'
+                    ? 'bg-emerald-600 text-white shadow-xs ring-1 ring-emerald-400'
+                    : 'bg-slate-950 text-emerald-400 hover:text-emerald-300 border border-slate-800 hover:bg-slate-900'
+                }`}
+              >
+                <span>{language === 'zh-CN' ? 'DDR5 (单芯片 Mono)' : 'DDR5 (Monolithic)'}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeGen === 'DDR5_MONO' ? 'bg-emerald-700 text-white' : 'bg-slate-800 text-emerald-400/80'
+                }`}>
+                  {genCounts.DDR5_MONO}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSetGeneration('DDR5_3DS')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeGen === 'DDR5_3DS'
+                    ? 'bg-rose-600 text-white shadow-xs ring-1 ring-rose-400'
+                    : 'bg-slate-950 text-rose-400 hover:text-rose-300 border border-slate-800 hover:bg-slate-900'
+                }`}
+              >
+                <span>{language === 'zh-CN' ? 'DDR5 (3DS 堆叠)' : 'DDR5 (3DS TSV)'}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                  activeGen === 'DDR5_3DS' ? 'bg-rose-700 text-white' : 'bg-slate-800 text-rose-400/80'
+                }`}>
+                  {genCounts.DDR5_3DS}
+                </span>
               </button>
             </div>
 
-            {/* Generation */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '代际:' : 'Gen:'}</span>
-              <select
-                value={selectedGeneration}
-                onChange={(e) => onFilterGeneration(e.target.value as any)}
-                className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-slate-200 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500"
-              >
-                <option value="ALL">{language === 'zh-CN' ? '全部代际 (DDR3/4/5)' : 'All Gens (DDR3/4/5)'}</option>
-                <option value="DDR3">DDR3</option>
-                <option value="DDR4">DDR4</option>
-                <option value="DDR5_MONO">{language === 'zh-CN' ? 'DDR5 单芯片' : 'DDR5 Monolithic'}</option>
-                <option value="DDR5_3DS">DDR5 3DS</option>
-              </select>
-            </div>
+            {/* Bulk Lot Checkbox */}
+            <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 font-medium text-xs">
+              <input
+                type="checkbox"
+                checked={onlyBulkLots}
+                onChange={(e) => setOnlyBulkLots(e.target.checked)}
+                className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950 border-slate-800"
+              />
+              {language === 'zh-CN' ? '仅显示批量/托盘挂牌 (Lot/Tray)' : 'Show Bulk Tray / Lot Listings Only'}
+            </label>
+          </div>
 
-            {/* Vendor Filter (Curated Benchmark Catalog Only) */}
-            {catalogType === 'curatedBenchmark' && vendorOptions.length > 1 && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '供应商:' : 'Vendor:'}</span>
+          {/* Bottom Row: Secondary Filters (Price Tier, Capacity, Speed, Vendor, Reset) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800/60">
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Generation Quick Dropdown */}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-md px-2 py-1">
+                <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '代际:' : 'Gen:'}</span>
                 <select
-                  value={selectedVendor}
-                  onChange={(e) => setSelectedVendor(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-md px-2 py-1 text-slate-200 text-xs font-medium focus:outline-none focus:ring-1 focus:ring-indigo-500 max-w-[170px] truncate"
+                  value={activeGen}
+                  onChange={(e) => handleSetGeneration(e.target.value as GenerationFilter)}
+                  className="bg-transparent text-slate-200 text-xs font-semibold focus:outline-none cursor-pointer pr-1"
                 >
-                  <option value="ALL">{language === 'zh-CN' ? `全部供应商 (${vendorOptions.length})` : `All Vendors (${vendorOptions.length})`}</option>
-                  {vendorOptions.map(v => (
-                    <option key={v} value={v}>{v}</option>
+                  <option value="ALL" className="bg-slate-900 text-slate-200">{language === 'zh-CN' ? `全部代际 (${genCounts.ALL})` : `All Generations (${genCounts.ALL})`}</option>
+                  <option value="DDR3" className="bg-slate-900 text-amber-400">DDR3 ({genCounts.DDR3})</option>
+                  <option value="DDR4" className="bg-slate-900 text-sky-400">DDR4 ({genCounts.DDR4})</option>
+                  <option value="DDR5_MONO" className="bg-slate-900 text-emerald-400">DDR5 Monolithic ({genCounts.DDR5_MONO})</option>
+                  <option value="DDR5_3DS" className="bg-slate-900 text-rose-400">DDR5 3DS TSV ({genCounts.DDR5_3DS})</option>
+                </select>
+              </div>
+
+              {/* Price Tier Toggle */}
+              <div className="flex items-center bg-slate-950 p-0.5 rounded-lg border border-slate-800">
+                <button
+                  onClick={() => setPriceTierFilter('ALL')}
+                  className={`px-2 py-1 text-[11px] font-semibold rounded ${
+                    priceTierFilter === 'ALL'
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {language === 'zh-CN' ? '全部价格' : 'All Prices'}
+                </button>
+                <button
+                  onClick={() => setPriceTierFilter('LOWEST_ONLY')}
+                  className={`px-2 py-1 text-[11px] font-semibold rounded flex items-center gap-1 ${
+                    priceTierFilter === 'LOWEST_ONLY'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-emerald-400'
+                  }`}
+                >
+                  <span>{language === 'zh-CN' ? '🟢 最低 (底价)' : '🟢 Lowest'}</span>
+                </button>
+                <button
+                  onClick={() => setPriceTierFilter('HIGHEST_ONLY')}
+                  className={`px-2 py-1 text-[11px] font-semibold rounded flex items-center gap-1 ${
+                    priceTierFilter === 'HIGHEST_ONLY'
+                      ? 'bg-purple-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-purple-300'
+                  }`}
+                >
+                  <span>{language === 'zh-CN' ? '🟣 最高 (高价)' : '🟣 Highest'}</span>
+                </button>
+              </div>
+
+              {/* Capacity Dropdown Filter */}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-md px-2 py-1">
+                <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '容量:' : 'Cap:'}</span>
+                <select
+                  value={selectedCapacity}
+                  onChange={(e) => setSelectedCapacity(e.target.value)}
+                  className="bg-transparent text-slate-200 text-xs font-medium focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="ALL" className="bg-slate-900 text-slate-200">{language === 'zh-CN' ? '全部容量' : 'All Capacities'}</option>
+                  {capacityOptions.map(c => (
+                    <option key={c} value={c} className="bg-slate-900 text-slate-200">{c}GB</option>
                   ))}
                 </select>
               </div>
+
+              {/* Speed Dropdown Filter */}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-md px-2 py-1">
+                <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '频率:' : 'Speed:'}</span>
+                <select
+                  value={selectedSpeed}
+                  onChange={(e) => setSelectedSpeed(e.target.value)}
+                  className="bg-transparent text-slate-200 text-xs font-medium focus:outline-none cursor-pointer pr-1"
+                >
+                  <option value="ALL" className="bg-slate-900 text-slate-200">{language === 'zh-CN' ? '全部频率' : 'All Speeds'}</option>
+                  {speedOptions.map(s => (
+                    <option key={s} value={s} className="bg-slate-900 text-slate-200">{s} MT/s</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Vendor Filter (Curated Benchmark Catalog Only) */}
+              {catalogType === 'curatedBenchmark' && vendorOptions.length > 1 && (
+                <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-md px-2 py-1">
+                  <span className="text-slate-400 font-medium text-[11px]">{language === 'zh-CN' ? '供应商:' : 'Vendor:'}</span>
+                  <select
+                    value={selectedVendor}
+                    onChange={(e) => setSelectedVendor(e.target.value)}
+                    className="bg-transparent text-slate-200 text-xs font-medium focus:outline-none cursor-pointer max-w-[150px] truncate"
+                  >
+                    <option value="ALL" className="bg-slate-900 text-slate-200">{language === 'zh-CN' ? `全部 (${vendorOptions.length})` : `All (${vendorOptions.length})`}</option>
+                    {vendorOptions.map(v => (
+                      <option key={v} value={v} className="bg-slate-900 text-slate-200">{v}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
+
+            {/* Reset All Filters Button */}
+            {(activeGen !== 'ALL' || selectedCapacity !== 'ALL' || selectedSpeed !== 'ALL' || selectedVendor !== 'ALL' || priceTierFilter !== 'ALL' || onlyBulkLots || searchTerm.trim() !== '') && (
+              <button
+                onClick={() => {
+                  handleSetGeneration('ALL');
+                  setSelectedCapacity('ALL');
+                  setSelectedSpeed('ALL');
+                  setSelectedVendor('ALL');
+                  setPriceTierFilter('ALL');
+                  setOnlyBulkLots(false);
+                  setSearchTerm('');
+                }}
+                className="text-xs text-indigo-400 hover:text-indigo-300 underline font-medium cursor-pointer"
+              >
+                {language === 'zh-CN' ? '重置所有筛选' : 'Reset All Filters'}
+              </button>
             )}
           </div>
-
-          {/* Bulk Lot Checkbox */}
-          <label className="flex items-center gap-1.5 cursor-pointer text-slate-300 font-medium text-xs">
-            <input
-              type="checkbox"
-              checked={onlyBulkLots}
-              onChange={(e) => setOnlyBulkLots(e.target.checked)}
-              className="rounded text-indigo-600 focus:ring-indigo-500 bg-slate-950 border-slate-800"
-            />
-            {language === 'zh-CN' ? '仅显示批量/托盘挂牌 (Lot/Tray)' : 'Show Bulk Tray / Lot Listings Only'}
-          </label>
         </div>
       </div>
+
+      {/* Active Filter State Summary Banner */}
+      {activeGen !== 'ALL' && (
+        <div className="flex items-center justify-between bg-slate-900/90 border border-indigo-500/30 px-3.5 py-2 rounded-lg text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-slate-300">
+              {language === 'zh-CN' ? '当前已筛选代际:' : 'Active Generation Filter:'}
+            </span>
+            <span className={`px-2 py-0.5 rounded font-bold font-mono text-[11px] ${
+              activeGen === 'DDR3' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+              activeGen === 'DDR4' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' :
+              activeGen === 'DDR5_MONO' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+              activeGen === 'DDR5_3DS' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+              'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+            }`}>
+              {activeGen === 'DDR3' ? 'DDR3 Registered ECC' :
+               activeGen === 'DDR4' ? 'DDR4 Registered ECC' :
+               activeGen === 'DDR5_MONO' ? 'DDR5 Monolithic (2Rx4)' :
+               activeGen === 'DDR5_3DS' ? 'DDR5 3DS TSV Stacked' : activeGen}
+            </span>
+            <span className="text-slate-400 text-[11px]">
+              ({language === 'zh-CN' ? `显示 ${filteredListings.length} 条记录，共 ${listings.length} 条` : `Showing ${filteredListings.length} of ${listings.length} listings`})
+            </span>
+          </div>
+          <button
+            onClick={() => handleSetGeneration('ALL')}
+            className="text-[11px] text-slate-400 hover:text-white underline cursor-pointer"
+          >
+            {language === 'zh-CN' ? '显示全部代际 (Clear Filter)' : 'Show All Generations'}
+          </button>
+        </div>
+      )}
 
       {/* Main Data Table */}
       <div className="bg-slate-900/50 rounded-xl border border-slate-800 shadow-sm overflow-hidden flex flex-col">
@@ -667,7 +936,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/60">
+            <tbody key={activeGen} className="divide-y divide-slate-800/60">
               {filteredListings.length === 0 ? (
                 <tr>
                   <td colSpan={catalogType === 'curatedBenchmark' ? 13 : 11} className="py-8 text-center text-slate-500">
@@ -675,7 +944,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   </td>
                 </tr>
               ) : (
-                filteredListings.map((item) => {
+                filteredListings.map((item, idx) => {
                   const effectiveModType = detectModuleType(item.title, item.capacityGB, item.generation, item.moduleType);
                   const effectiveRank = extractMemoryRank(item.title, item.capacityGB, item.generation, item.rank);
                   const pricePerGB = item.pricePerUnit / item.capacityGB;
@@ -686,7 +955,7 @@ export const ListingsTable: React.FC<ListingsTableProps> = ({
                   const itemTrend = trends.find(t => t.generation === item.generation && t.capacityGB === item.capacityGB && t.speedMTs === item.speedMTs);
 
                   return (
-                    <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
+                    <tr key={`${item.id}-${item.generation}-${idx}`} className="hover:bg-slate-800/30 transition-colors">
                       {/* Generation Badge */}
                       <td className="py-3 px-3 whitespace-nowrap">
                         <span className={`inline-block px-2 py-0.5 rounded font-bold text-[10px] uppercase font-mono ${

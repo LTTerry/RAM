@@ -1,4 +1,5 @@
 import { MarketTrend, RamListing, MemoryGeneration } from '../types';
+import { detectModuleType } from './memoryClassification';
 
 export interface SnapshotItem {
   id?: string;
@@ -31,21 +32,36 @@ export function calculateTrendsFromSnapshots(
 ): MarketTrend[] {
   if (!listings || listings.length === 0) return [];
 
-  // Group listings by SKU (generation-capacity-speed)
+  // Group listings by SKU (generation-capacity-speed and module architecture for DDR5)
   const skuMap = new Map<string, {
     generation: MemoryGeneration;
     capacityGB: number;
     speedMTs: number;
+    moduleType?: 'RDIMM' | 'LRDIMM' | '3DS RDIMM';
+    technology?: 'Monolithic' | '3DS TSV';
+    is3DS?: boolean;
     items: RamListing[];
   }>();
 
   listings.forEach(l => {
-    const key = `${l.generation}-${l.capacityGB}-${l.speedMTs}`;
+    const modType = detectModuleType(l.title, l.capacityGB, l.generation, l.moduleType);
+    const is3ds = l.generation === 'DDR5' && (
+      modType === '3DS RDIMM' || 
+      l.moduleType === '3DS RDIMM' || 
+      l.capacityGB >= 256
+    );
+    const key = l.generation === 'DDR5'
+      ? `${l.generation}-${l.capacityGB}-${l.speedMTs}-${is3ds ? '3ds' : 'mono'}`
+      : `${l.generation}-${l.capacityGB}-${l.speedMTs}`;
+
     if (!skuMap.has(key)) {
       skuMap.set(key, {
         generation: l.generation,
         capacityGB: l.capacityGB,
         speedMTs: l.speedMTs,
+        moduleType: is3ds ? '3DS RDIMM' : 'RDIMM',
+        technology: is3ds ? '3DS TSV' : 'Monolithic',
+        is3DS: is3ds,
         items: []
       });
     }
@@ -138,6 +154,9 @@ export function calculateTrendsFromSnapshots(
       generation: sku.generation,
       capacityGB: sku.capacityGB,
       speedMTs: sku.speedMTs,
+      moduleType: sku.moduleType,
+      technology: sku.technology,
+      is3DS: sku.is3DS,
       currentAvgPrice,
       lowestAskingCurrent,
       highestAskingCurrent,
@@ -150,7 +169,9 @@ export function calculateTrendsFromSnapshots(
       trendDirection: oneWeekChangePercent > 0.5 ? 'up' : oneWeekChangePercent < -0.5 ? 'down' : 'stable',
       pricePerGB: Math.round((currentAvgPrice / sku.capacityGB) * 100) / 100,
       marketActivityLevel: 'High',
-      analysisNotes: `Curated benchmark based on ${sku.items.length} verified distributor listing${sku.items.length > 1 ? 's' : ''}${vendorNote}.`
+      analysisNotes: sku.generation === 'DDR5' && sku.capacityGB === 128
+        ? (sku.is3DS ? '3DS TSV stacked RDIMM technology (2S2Rx4 / 4Rx4).' : 'Monolithic 32Gb die RDIMM (2Rx4). Non-3DS planar architecture.')
+        : `Curated benchmark based on ${sku.items.length} verified distributor listing${sku.items.length > 1 ? 's' : ''}${vendorNote}.`
     };
   });
 }

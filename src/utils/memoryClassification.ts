@@ -13,9 +13,15 @@ export function detectModuleType(
 ): MemoryModuleType {
   const t = (title || '').toLowerCase();
   
-  // 1. Explicit 3DS / TSV indicators (including 2S2R, 2S4R, 4S4R 3DS stacking standards)
-  if (/\b(?:3ds|tsv|3d[- ]stack|3ds[- ]rdimm|2s2r|2s4r|4s4r|2s2rx4|2s4rx4|4s4rx4)\b/i.test(t)) {
-    return '3DS RDIMM';
+  // 1. Explicit 3DS / TSV indicators (Only relevant for DDR5 high-density stacked modules)
+  if (generation === 'DDR5' || /\b(?:ddr5|pc5)\b/i.test(t)) {
+    if (/\b(?:3ds|tsv|3d[- ]stack|3ds[- ]rdimm|2s2r|2s4r|4s4r|2s2rx4|2s4rx4|4s4rx4)\b/i.test(t)) {
+      // Check if it's explicitly monolithic 128GB (2Rx4)
+      if (capacityGB === 128 && (/\b(?:monolithic|mono|2rx4|1s2rx4|32gb\s*die)\b/i.test(t) || /\b(?:m321raja|mtc40f2047)\b/i.test(t))) {
+        return 'RDIMM';
+      }
+      return '3DS RDIMM';
+    }
   }
 
   // 2. Explicit LRDIMM indicators (Load Reduced DIMMs)
@@ -36,12 +42,17 @@ export function detectModuleType(
   // 3. Generation & Density architectural constraints
   if (generation === 'DDR5') {
     if (capacityGB >= 256) return '3DS RDIMM';
-    // 128GB DDR5: 4Rx4, 8Rx4, 2S2R, TSV are 3DS; standard monolithic 2Rx4/1S2Rx4 remain RDIMM
-    if (capacityGB === 128 && (/\b(?:3ds|tsv|8rx4|4rx4|2s2r|2s4r|4s4r)\b/i.test(t) || !/\b(?:2rx4|1s2rx4)\b/i.test(t))) {
-      if (/\b(?:2rx4|1s2rx4)\b/i.test(t) && !/\b(?:3ds|tsv|2s2r|2s4r|4s4r)\b/i.test(t)) {
-        return 'RDIMM';
+    // 128GB DDR5: 3DS TSV stacked modules vs Monolithic 32Gb die standard RDIMMs
+    if (capacityGB === 128) {
+      const has3dsKeywords = /\b(?:3ds|tsv|3d[- ]stack|3ds[- ]rdimm|8rx4|4rx4|quad\s*rank|octal\s*rank|2s2r|2s4r|4s4r|2s2rx4|2s4rx4|4s4rx4)\b/i.test(t) ||
+        /\b(?:m321raga|hmct04meera|hmct04agera197|hmct04agera199)\b/i.test(t);
+      const hasMonoKeywords = /\b(?:monolithic|mono|2rx4|1rx4|1s2rx4|2s1rx4|32gb\s*die)\b/i.test(t) ||
+        /\b(?:m321raja|mtc40f2047)\b/i.test(t);
+
+      if (has3dsKeywords && !hasMonoKeywords) {
+        return '3DS RDIMM';
       }
-      return '3DS RDIMM';
+      return 'RDIMM';
     }
     return 'RDIMM';
   }

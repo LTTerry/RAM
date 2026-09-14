@@ -1,4 +1,5 @@
 export type MemoryGeneration = 'DDR3' | 'DDR4' | 'DDR5';
+export type GenerationFilter = 'ALL' | 'DDR3' | 'DDR4' | 'DDR5' | 'DDR5_MONO' | 'DDR5_3DS';
 
 export interface RamListing {
   id: string;
@@ -55,6 +56,9 @@ export interface MarketTrend {
   generation: MemoryGeneration;
   capacityGB: number;
   speedMTs: number;
+  moduleType?: 'RDIMM' | 'LRDIMM' | '3DS RDIMM';
+  technology?: 'Monolithic' | '3DS TSV';
+  is3DS?: boolean;
   avgPrice3MoAgo: number;
   avgPrice2MoAgo: number;
   avgPrice1MoAgo: number;
